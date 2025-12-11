@@ -1,69 +1,70 @@
-// src/components/Header.js
-"use client"; // This directive is specific to Next.js App Router for client-side functionality
+"use client";
 
 import React, { useState } from 'react';
-import {  BellIcon, UserCircleIcon, MagnifyingGlassIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link'; // Using Next.js Link component for better navigation
+import { BellIcon, UserCircleIcon, MagnifyingGlassIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 import Image from 'next/image';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="relative bg-indigo-600 text-white font-sans shadow-lg z-50">
-      <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+    <header className="bg-indigo-600 text-white font-sans shadow-lg z-50 border-b border-gray-100 sticky top-0 z-50">
+      <div className="container mx-auto px-6 h-20 flex justify-between items-center">
+        
         {/* Left Side: Logo */}
-        <div className="flex items-center space-x-3">
-          {/* Assuming you have a logo.png in your public directory */}
-          <Link href="/">
-            <Image src="/logo2.png" alt="ElectroCare Logo"
-             className='h-16 w- object-contain'
-               height={30}
-                  width={30}
-            /> 
-          </Link>
-          <Link href="/">
-            <span className="text-white font-bold text-xl md:text-2xl tracking-wide cursor-pointer">
+        <div className="flex items-center gap-2 z-50">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="relative h-8 w-8">
+               <Image 
+                 src="/logo2.png" 
+                 alt="ElectroCare" 
+                 fill 
+                 className="object-contain" 
+                 priority
+               />
+            </div>
+            <div className="flex items-center leading-none">
+               <span className="text-white font-bold text-xl md:text-2xl tracking-wide cursor-pointer">
               ElectroCare
             </span>
+            </div>
           </Link>
         </div>
 
-        {/* Center: Main Navigation Links (Desktop) */}
-        <nav className="hidden md:flex items-center space-x-8 text-md font-medium">
-          <Link href="/" className="hover:text-blue-300 transition-colors">Home</Link>
-          <Link href="/Dashboard" className="hover:text-blue-300 transition-colors">My Appliances</Link>
-          <Link href="/request-service" className="hover:text-blue-300 transition-colors">Request Service</Link>
-          <Link href="/warranty-plans" className="hover:text-blue-300 transition-colors">Warranty Plans</Link> {/* Changed from extended-warranty for clarity */}
-          <Link href="/support" className="hover:text-blue-300 transition-colors">Support</Link>
+        {/* Center: Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-white-600">
+          <Link href="/" className="hover:text-white-600 transition-colors">Home</Link>
+          <Link href="/Dashboard" className="hover:text-blue-600 transition-colors">My Appliances</Link>
+          <Link href="/request-service" className="hover:text-blue-600 transition-colors">Request Service</Link>
+          <Link href="/warranty-plans" className="hover:text-blue-600 transition-colors">Plans</Link>
         </nav>
 
-        {/* Right Side: Search, Notifications, User (Desktop & Mobile) */}
-        <div className="flex items-center space-x-6">
-          {/* Search Bar (visible on desktop, hidden on mobile for cleaner look) */}
-          <div className="relative hidden md:block">
+        {/* Right Side: Actions */}
+        <div className="flex items-center gap-4">
+          
+          {/* Desktop Search Bar */}
+          <div className="hidden lg:flex relative items-center">
             <input 
               type="text" 
-              placeholder="Search products..." 
-              className="bg-white text-black border border-blue-700 rounded-full py-2 pl-4 pr-10  placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all w-48 lg:w-64"
+              placeholder="Search..." 
+              className="bg-gray-100 text-gray-800 rounded-full py-2 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 w-48 transition-all focus:w-64"
             />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2">
-              <MagnifyingGlassIcon className="h-5 w-5 text-blue-300" />
-            </button>
+            <MagnifyingGlassIcon className="h-4 w-4 text-white-400 absolute right-3" />
           </div>
           
-          <button className="relative hover:text-blue-300 transition-colors">
+          <button className="relative p-2 hover:bg-white-100 rounded-full transition-colors text-white-600">
             <BellIcon className="h-6 w-6" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+            <span className="absolute top-1 right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-2 w-2"></span>
           </button>
           
-          <Link href="/Login" className="hover:text-blue-300 transition-colors">
-            <UserCircleIcon className="h-6 w-6" />
+          <Link href="/Login" className="hidden md:block p-1 hover:bg-gray-100 rounded-full text-white-600">
+            <UserCircleIcon className="h-7 w-7" />
           </Link>
 
-          {/* Mobile Menu Toggle Button */}
+          {/* Mobile Menu Toggle */}
           <button 
-            className="md:hidden p-1 rounded-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="md:hidden p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-lg"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? (
@@ -77,25 +78,17 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-blue-900 shadow-lg pb-4">
-          <nav className="flex flex-col items-center space-y-4 py-4">
-            <Link href="/" className="text-white hover:text-blue-300 transition-colors font-medium text-lg" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-            <Link href="/Dashboard" className="text-white hover:text-blue-300 transition-colors font-medium text-lg" onClick={() => setIsMobileMenuOpen(false)}>My Appliances</Link>
-            <Link href="/request-service" className="text-white hover:text-blue-300 transition-colors font-medium text-lg" onClick={() => setIsMobileMenuOpen(false)}>Request Service</Link>
-            <Link href="/warranty-plans" className="text-white hover:text-blue-300 transition-colors font-medium text-lg" onClick={() => setIsMobileMenuOpen(false)}>Warranty Plans</Link>
-            <Link href="/support" className="text-white hover:text-blue-300 transition-colors font-medium text-lg" onClick={() => setIsMobileMenuOpen(false)}>Support</Link>
-            {/* Mobile Search Bar */}
-            <div className="relative w-3/4 mt-4">
-              <input 
-                type="text" 
-                placeholder="Search products..." 
-                className="bg-blue-800 border border-blue-700 rounded-full py-2 pl-4 pr-10 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-              />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2">
-                <MagnifyingGlassIcon className="h-5 w-5 text-blue-300" />
-              </button>
-            </div>
-          </nav>
+        <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 shadow-xl py-4 px-6 flex flex-col gap-4 animate-in slide-in-from-top-5">
+           <Link href="/" className="text-gray-800 font-medium py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+           <Link href="/Dashboard" className="text-gray-800 font-medium py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>My Appliances</Link>
+           <Link href="/request-service" className="text-gray-800 font-medium py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>Request Service</Link>
+           <Link href="/warranty-plans" className="text-gray-800 font-medium py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>Warranty Plans</Link>
+           
+           <div className="pt-2">
+              <Link href="/Login" className="flex items-center justify-center w-full bg-blue-600 text-white font-bold py-3 rounded-lg" onClick={() => setIsMobileMenuOpen(false)}>
+                 Login / Signup
+              </Link>
+           </div>
         </div>
       )}
     </header>

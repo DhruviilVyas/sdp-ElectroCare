@@ -164,153 +164,159 @@ const TopHeader = () => {
 );
 };
 const HeroServiceSection = () => {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
-      {" "}
-      <div className="mb-6">
-        {" "}
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2 mb-2">
-          {" "}
-          <SparklesIcon className="h-8 w-8 text-purple-500" />{" "}
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-cyan-600">
-            {" "}
-            Need a fix? We&apos;ve got you!{" "}
-          </span>{" "}
-        </h2>{" "}
-        <p className="text-gray-500 text-sm md:text-base max-w-3xl">
-          {" "}
-          India&apos;s first AI-powered sustainable repair service - we make device
-          repairs affordable, convenient, and eco-friendly!{" "}
-        </p>{" "}
-      </div>{" "}
-      <Link href={"/ServiceReq"}>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
-        {" "}
-        <button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-emerald-600 hover:to-cyan-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-emerald-200 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
-          {" "}
-          <WrenchScrewdriverIcon className="h-5 w-5" /> Book Your Repair Now{" "}
-          <span className="ml-1">→</span>{" "}
-        </button>{" "}
-        <div className="text-xs text-gray-400 font-medium flex items-center gap-2">
-          {" "}
-          <span>Get instant quotes</span> • <span>Same-day service</span> •{" "}
-          <span>Doorstep repair</span>{" "}
-        </div>{" "}
-      </div>{" "}
-      </Link>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {" "}
-               <Link href={"/ServiceReq"}>
+  return (<>
+    <div className="md:hidden w-full h-32 bg-gradient-to-r from-[#6f72f2] to-[#9b51e0] rounded-xl flex items-center justify-between px-6 text-white shadow-md relative overflow-hidden mb-4">
+         <div className="relative z-10">
+             <p className="text-xs font-medium opacity-90 mb-1">Composition Strength</p>
+             <h2 className="text-2xl font-bold mb-2">51% <span className="text-sm font-normal">Savings</span></h2>
+             <button className="bg-[#2d2d2d] text-white text-xs px-4 py-1.5 rounded-full font-bold">Learn more</button>
+         </div>
+         <div className="relative z-10">
+             <ShieldCheckIcon className="h-16 w-16 opacity-30" />
+         </div>
+     </div>
+   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 md:p-8 mb-8">
 
-        <button className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 p-1 text-white shadow-md hover:shadow-lg transition-all">
-          {" "}
-          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>{" "}
-          <div className="relative h-full bg-blue-500/20 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center gap-3">
-            {" "}
-            <WrenchScrewdriverIcon className="h-6 w-6" />{" "}
-            <span className="font-bold text-lg">Book a Repair</span>{" "}
-          </div>{" "}
-        </button>
-        </Link>{" "}
-       <Link href={"/register-landing"}>
-        <button className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 p-1 text-white shadow-md hover:shadow-lg transition-all">
-          {" "}
-          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>{" "}
-          <div className="relative h-full bg-blue-500/20 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center gap-3">
-            {" "}
-            <ArrowPathIcon className="h-6 w-6" />{" "}
-            <span className="font-bold text-lg">Trade Your Device</span>{" "}
-          </div>{" "}
-        </button>{" "}
-        </Link>
-               <Link href={"/ExtendWarrenty"}>
+  {/* Heading */}
+  <div className="mb-6 text-center sm:text-left">
+    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center justify-center sm:justify-start gap-2 mb-2">
+      <SparklesIcon className="h-7 w-7 md:h-8 md:w-8 text-purple-500" />
+      <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-cyan-600">
+        Need a fix? We&apos;ve got you!
+      </span>
+    </h2>
 
-        <button className="group pointer:cursor relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 p-1 text-white shadow-md hover:shadow-lg transition-all">
-          {" "}
-          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>{" "}
-          <div className="relative h-full bg-blue-500/20 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center gap-3">
-            {" "}
-            <ArchiveBoxIcon className="h-6 w-6" />{" "}
-            <span className="font-bold text-lg">Extend Warrenty</span>{" "}
-          </div>{" "}
-        </button>{" "}
-        </Link>
-      </div>{" "}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {" "}
-        <div className="bg-sky-50 rounded-xl p-4 border border-sky-100 flex items-center gap-4">
-          {" "}
-          <div className="p-2 bg-white rounded-full text-sky-600 shadow-sm">
-            <BoltIcon className="h-5 w-5" />
-          </div>{" "}
-          <div>
-            <p className="text-xs text-gray-500 font-medium uppercase">
-              Active Repairs
-            </p>
-            <p className="text-xl font-bold text-gray-800">
-              {stats.activeRepairs}
-            </p>
-          </div>{" "}
-        </div>{" "}
-        <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100 flex items-center gap-4">
-          {" "}
-          <div className="p-2 bg-white rounded-full text-emerald-600 shadow-sm">
-            <SparklesIcon className="h-5 w-5" />
-          </div>{" "}
-          <div>
-            <p className="text-xs text-gray-500 font-medium uppercase">
-              Repairs Today
-            </p>
-            <p className="text-xl font-bold text-gray-800">
-              {stats.repairsToday}
-            </p>
-          </div>{" "}
-        </div>{" "}
-        <div className="bg-purple-50 rounded-xl p-4 border border-purple-100 flex items-center gap-4">
-          {" "}
-          <div className="p-2 bg-white rounded-full text-purple-600 shadow-sm">
-            <ClockIcon className="h-5 w-5" />
-          </div>{" "}
-          <div>
-            <p className="text-xs text-gray-500 font-medium uppercase">
-              Avg. Repair Time
-            </p>
-            <p className="text-xl font-bold text-gray-800">{stats.avgTime}</p>
-          </div>{" "}
-        </div>{" "}
-        <div className="bg-green-50 rounded-xl p-4 border border-green-100 flex items-center gap-4">
-          {" "}
-          <div className="p-2 bg-white rounded-full text-green-600 shadow-sm">
-            {" "}
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-              />
-            </svg>{" "}
-          </div>{" "}
-          <div>
-            <p className="text-xs text-gray-500 font-medium uppercase">
-              E-Waste Saved
-            </p>
-            <p className="text-xl font-bold text-gray-800">{stats.saved}</p>
-          </div>{" "}
-        </div>{" "}
-      </div>{" "}
+    <p className="text-gray-500 text-sm md:text-base max-w-3xl mx-auto sm:mx-0">
+      India&apos;s first AI-powered sustainable repair service — we make device repairs
+      affordable, convenient, and eco-friendly!
+    </p>
+  </div>
+
+  {/* CTA Button */}
+  <Link href="/ServiceReq">
+    <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 mb-8">
+      <button className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 
+              hover:from-emerald-600 hover:to-cyan-600 text-white 
+              px-6 py-3 rounded-lg font-bold shadow-lg shadow-emerald-200 
+              transition-all flex items-center justify-center gap-2">
+        <WrenchScrewdriverIcon className="h-5 w-5" />
+        Book Your Repair Now
+        <span className="ml-1">→</span>
+      </button>
+
+      <div className="text-xs text-gray-400 font-medium flex flex-wrap justify-center sm:justify-start gap-2">
+        <span>Instant Quotes</span> • 
+        <span>Same-Day Service</span> • 
+        <span>Doorstep Repair</span>
+      </div>
     </div>
+  </Link>
+
+  {/* Three Main Buttons */}
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+
+    {/* Repair */}
+    <Link href="/ServiceReq">
+      <button className="group w-full relative overflow-hidden rounded-xl bg-gradient-to-br 
+          from-cyan-400 to-blue-500 p-1 text-white shadow-md hover:shadow-lg transition-all">
+        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="relative bg-blue-500/20 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center gap-3">
+          <WrenchScrewdriverIcon className="h-6 w-6" />
+          <span className="font-bold text-lg">Book a Repair</span>
+        </div>
+      </button>
+    </Link>
+
+    {/* Trade */}
+    <Link href="/register-landing">
+      <button className="group w-full relative overflow-hidden rounded-xl bg-gradient-to-br 
+          from-cyan-400 to-blue-500 p-1 text-white shadow-md hover:shadow-lg transition-all">
+        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="relative bg-blue-500/20 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center gap-3">
+          <ArrowPathIcon className="h-6 w-6" />
+          <span className="font-bold text-lg">Trade Device</span>
+        </div>
+      </button>
+    </Link>
+
+    {/* Warranty */}
+    <Link href="/ExtendWarrenty">
+      <button className="group w-full relative overflow-hidden rounded-xl bg-gradient-to-br 
+          from-cyan-400 to-blue-500 p-1 text-white shadow-md hover:shadow-lg transition-all">
+        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="relative bg-blue-500/20 backdrop-blur-sm rounded-lg p-4 flex items-center justify-center gap-3">
+          <ArchiveBoxIcon className="h-6 w-6" />
+          <span className="font-bold text-lg">Extend Warranty</span>
+        </div>
+      </button>
+    </Link>
+
+  </div>
+
+  {/* Stats Section */}
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+    {/* Active Repairs */}
+    <div className="bg-sky-50 rounded-xl p-4 border border-sky-100 flex items-center gap-4">
+      <div className="p-2 bg-white rounded-full text-sky-600 shadow-sm">
+        <BoltIcon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="text-xs text-gray-500 font-medium uppercase">Active Repairs</p>
+        <p className="text-xl font-bold text-gray-800">{stats.activeRepairs}</p>
+      </div>
+    </div>
+
+    {/* Repairs Today */}
+    <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100 flex items-center gap-4">
+      <div className="p-2 bg-white rounded-full text-emerald-600 shadow-sm">
+        <SparklesIcon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="text-xs text-gray-500 font-medium uppercase">Repairs Today</p>
+        <p className="text-xl font-bold text-gray-800">{stats.repairsToday}</p>
+      </div>
+    </div>
+
+    {/* Avg Repair Time */}
+    <div className="bg-purple-50 rounded-xl p-4 border border-purple-100 flex items-center gap-4">
+      <div className="p-2 bg-white rounded-full text-purple-600 shadow-sm">
+        <ClockIcon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="text-xs text-gray-500 font-medium uppercase">Avg. Time</p>
+        <p className="text-xl font-bold text-gray-800">{stats.avgTime}</p>
+      </div>
+    </div>
+
+    {/* E-Waste Saved */}
+    <div className="bg-green-50 rounded-xl p-4 border border-green-100 flex items-center gap-4">
+      <div className="p-2 bg-white rounded-full text-green-600 shadow-sm">
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round"
+                d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+        </svg>
+      </div>
+
+      <div>
+        <p className="text-xs text-gray-500 font-medium uppercase">E-Waste Saved</p>
+        <p className="text-xl font-bold text-gray-800">{stats.saved}</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+    </>
   );
 };
 // --- UPDATED COMPONENT: Registered Products ---
 // FIX: Added default value `products = []` to prevent crash if data is missing
 const RegisteredProducts = ({ products = [] }) => (
-  <section className="mb-8">
+  <>
+  <section className="mb-8 px-4 md:px-0">
      <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-800">Your Registered Products</h3>
         <Link href="/add-appliance" className="text-blue-600 text-sm font-semibold hover:underline flex items-center">
@@ -324,7 +330,7 @@ const RegisteredProducts = ({ products = [] }) => (
            <p className="text-gray-500">No products registered yet.</p>
         </div>
      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {products.map((product) => (
             <div key={product.id} className="bg-white border border-gray-200 rounded-lg p-4 relative hover:shadow-md transition-all group">
                <div className={`absolute top-4 left-0 px-3 py-1 text-[10px] font-bold text-white rounded-r-md uppercase tracking-wide shadow-sm ${product.statusColor || 'bg-gray-500'}`}>
@@ -353,10 +359,13 @@ const RegisteredProducts = ({ products = [] }) => (
         </div>
      )}
   </section>
+
+  
+  </>
 );
 
 const QuickActionCard = () => (
-  <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm h-full flex flex-col justify-between hover:shadow-md transition-shadow">
+  <div className="  bg-white border border-gray-200 rounded-2xl p-6 shadow-sm h-full flex flex-col justify-between hover:shadow-md transition-shadow">
     <div>
       <div className="flex items-center gap-4 mb-4">
         <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl"><DocumentTextIcon className="h-8 w-8 text-orange-500" /></div>
@@ -374,7 +383,7 @@ const QuickActionCard = () => (
   </div>
 );
 const LiveTrackingMap = () => (
-  <div className="relative w-full h-[320px] bg-slate-100 rounded-2xl overflow-hidden border border-gray-200 shadow-inner group">
+  <div className=" hidden md:block relative w-full h-[320px] bg-slate-100 rounded-2xl overflow-hidden border border-gray-200 shadow-inner group">
     <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
     {/* Roads */}
     <div className="absolute top-1/2 left-0 right-0 h-6 bg-white shadow-sm border-y border-gray-300 -rotate-2"></div>
@@ -407,9 +416,9 @@ const LiveTrackingMap = () => (
 
 // --- NEW: Testimonials (Matches "Customers say" Image) ---
 const TestimonialsSection = () => (
-  <section className="mb-12">
+  <section className="  mb-12">
     <h3 className="text-2xl font-bold text-gray-800 mb-6">What our customers have to say</h3>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto pb-4 md:pb-0 snap-x no-scrollbar">
       {testimonials.map((t) => (
         <div key={t.id} className="relative bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="absolute -top-4 -left-2 text-6xl text-blue-100 font-serif leading-none">“</div>
@@ -452,7 +461,7 @@ const AiBanner = () => (
       </div>
       
       {/* Visual Tech Element */}
-      <div className="hidden md:block relative">
+      <div className="  relative">
          <div className="w-32 h-32 border-4 border-blue-500/30 rounded-full flex items-center justify-center animate-spin-slow">
             <div className="w-24 h-24 border-4 border-purple-500/50 rounded-full border-t-transparent animate-spin"></div>
          </div>
@@ -523,8 +532,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <TopHeader />
-      <div className="w-full h-44 bg-gradient-to-r from-blue-900 to-blue-700 rounded-none flex items-center justify-center text-white font-bold text-xl shadow-inner">
-        Say GoodBye to Device Worries!
+      <div className=" hidden md:block w-full h-44 bg-gradient-to-r from-blue-900 to-blue-700 rounded-none flex items-center justify-center text-white font-bold text-xl shadow-inner">
+    <center>   Say GoodBye to Device Worries </center>
+    <center>!!ADVERTISE HERE!!</center> 
       </div>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <div className="flex justify-between items-end">
