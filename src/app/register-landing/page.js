@@ -1,4 +1,6 @@
 "use client";
+import Navbar from "@/components/Navbar";
+
 
 import {
   QrCodeIcon,
@@ -6,99 +8,68 @@ import {
   GlobeAltIcon,
   UserGroupIcon,
   BellAlertIcon,
+ 
   GiftIcon,
   CloudArrowUpIcon,
   HomeModernIcon,
   InformationCircleIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
-import Link from "next/link";
 import Image from "next/image";
 
 // --- COMPONENTS ---
 
-// 1. Navigation (Matches the clean top bar style)
-const Navbar = () => (
-  <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
-    <div className="flex items-center gap-8">
-      <div className="flex items-center shrink-0">
-        {" "}
-        <Link href="/" className="flex items-center gap-3">
-          {" "}
-          <Image
-            src="/logo2.png"
-            alt="ElectroCare Logo"
-            className="h-10 w-10 object-contain rounded-full border border-gray-100 shadow-sm"
-    height={30}
-                  width={30}
-                           />{" "}
-          <div className="flex items-center">
-            {" "}
-            <span className="text-red-500 font-bold text-2xl tracking-tighter">
-              Electro
-            </span>{" "}
-            <span className="text-blue-600 font-bold text-2xl tracking-tighter">
-              Care
-            </span>{" "}
-          </div>{" "}
-        </Link>{" "}
-      </div>{" "}
-      <div className="hidden md:flex gap-6 text-sm font-semibold text-gray-800">
-        <Link href="#" className="hover:text-blue-600 transition-colors">Shop</Link>
-        <Link href="#" className="hover:text-blue-600 transition-colors">Mobile</Link>
-        <Link href="#" className="hover:text-blue-600 transition-colors">TV & AV</Link>
-        <Link href="#" className="hover:text-blue-600 transition-colors">Appliances</Link>
-        <Link href="#" className="hover:text-blue-600 transition-colors">Support</Link>
+// 2. HERO SECTION (Replicates the "Registration. Easy from start to finish." image)
+// Ensure these imports are at the top of your file
+import Link from "next/link";
+import { PlusIcon, ShieldCheckIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
+
+const HeroSection = () => (
+  <section className="bg-gray-900 text-white py-20 px-6 md:px-12 relative overflow-hidden">
+    {/* Abstract Background Shapes (Consistent with GarageHero) */}
+    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+    <div className="absolute bottom-0 left-0 w-72 h-72 bg-purple-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 translate-y-1/2 -translate-x-1/2"></div>
+
+    <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+      {/* Left: Text Content */}
+      <div className="text-center md:text-left">
+        <p className="text-blue-400 font-bold tracking-wide uppercase text-sm mb-3">Product Registration</p>
+        <h1 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
+          Registration.<br />Easy from start to finish.
+        </h1>
+        <p className="text-gray-400 text-lg mb-8 max-w-lg mx-auto md:mx-0">
+           Secure your warranty, get support faster, and keep all your appliance details in one safe place.
+        </p>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+            <Link href="/add-appliance">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105 shadow-xl flex items-center justify-center gap-2">
+                <PlusIcon className="h-5 w-5" /> Start Registration
+                </button>
+            </Link>
+            <button className="bg-transparent border border-gray-600 hover:bg-gray-800 text-white font-bold py-4 px-8 rounded-full transition-all flex items-center justify-center">
+               Learn More
+            </button>
+        </div>
+      </div>
+
+      {/* Right: Visual Trust Badges (Floating Cards) */}
+      <div className="hidden md:flex flex-col gap-4 relative">
+         <div className="bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-700 shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-500 w-64">
+            <ShieldCheckIcon className="h-10 w-10 text-green-400 mb-3" />
+            <h3 className="font-bold text-lg">Warranty Safe</h3>
+            <p className="text-gray-400 text-sm">Never lose a warranty card again.</p>
+         </div>
+         <div className="bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-700 shadow-2xl transform -rotate-3 hover:rotate-0 transition-all duration-500 w-64 ml-12">
+            <DocumentTextIcon className="h-10 w-10 text-blue-400 mb-3" />
+            <h3 className="font-bold text-lg">Digital Proof</h3>
+            <p className="text-gray-400 text-sm">Access invoices anytime, anywhere.</p>
+         </div>
       </div>
     </div>
-    <div className="flex items-center gap-6 text-xs font-bold text-gray-800">
-      <Link href="#" className="hover:text-blue-600 transition-colors">Support</Link>
-      <Link href="#" className="hover:text-blue-600 transition-colors flex items-center gap-1">
-        For Business <ArrowRightIcon className="h-3 w-3" />
-      </Link>
-      <button className="p-2 hover:bg-gray-100 rounded-full">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-        </svg>
-      </button>
-      <button className="p-2 hover:bg-gray-100 rounded-full">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-        </svg>
-      </button>
-    </div>
-  </nav>
+  </section>
 );
-
-// 2. HERO SECTION (Replicates the "Registration. Easy from start to finish." image)
-const HeroSection = () => (
-  <div className="relative h-[600px] w-full bg-gray-100 flex items-center justify-center overflow-hidden">
-    {/* Background Image */}
-    <div className="absolute inset-0">
-      <Image 
-        src="/landingRegister.png" 
-        alt="Woman in kitchen with laptop" 
-        fill
-        className="object-cover object-center"
-      />
-      {/* Subtle overlay to ensure text readability */}
-      <div className="absolute inset-0 bg-black/10"></div>
-    </div>
-
-    <div className="relative z-10 text-center px-4 max-w-5xl mx-auto mt-20">
-      <p className="text-white font-bold mb-4 tracking-wide uppercase text-sm drop-shadow-md">Product Registration</p>
-      <h1 className="text-5xl md:text-7xl font-bold text-white mb-10 leading-tight drop-shadow-lg">
-        Registration. Easy from start to finish.
-      </h1>
-      <Link href="/add-appliance">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-xl text-lg">
-          Start registration
-        </button>
-      </Link>
-    </div>
-  </div>
-);
-
 // 3. BENEFITS SECTION (Replicates "Why register?" + 4 icons layout)
 const BenefitsSection = () => (
   <section className="py-24 px-4 md:px-8 max-w-[1400px] mx-auto bg-white">

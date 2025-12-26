@@ -1,15 +1,9 @@
 "use client";
-import  { useState } from "react"; 
+import { useState } from "react"; 
 import { 
-    DevicePhoneMobileIcon, 
-    ComputerDesktopIcon, 
-    TvIcon,
-    PhotoIcon,
-    ArrowLeftIcon,
-    CheckCircleIcon,
-    CpuChipIcon,
-    CameraIcon,
-    MusicalNoteIcon,
+    DevicePhoneMobileIcon, ComputerDesktopIcon, TvIcon,
+    PhotoIcon, ArrowLeftIcon, CheckCircleIcon,
+    CpuChipIcon, CameraIcon, MusicalNoteIcon, StarIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import Image from "next/image";
@@ -28,22 +22,18 @@ const InputField = ({ id, label, type = 'text', placeholder, required = true }) 
     <div className="mb-4">
         <label htmlFor={id} className="block text-sm font-semibold text-gray-700 mb-1.5">{label} {required && <span className="text-red-500">*</span>}</label>
         <input 
-            type={type} 
-            id={id} 
-            name={id} 
-            placeholder={placeholder} 
-            required={required}
+            type={type} id={id} name={id} placeholder={placeholder} required={required}
             className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-400"
         />
     </div>
 );
 
-// --- MAIN COMPONENT ---
 export default function AddProductPage() {
     const [step, setStep] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [invoiceFile, setInvoiceFile] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
 
     const handleCategorySelect = (category) => {
         setSelectedCategory(category);
@@ -56,38 +46,51 @@ export default function AddProductPage() {
         }
     };
     
-    const handleSubmit = (e) => {
+    // --- REAL WORLD SUBMISSION LOGIC ---
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setErrorMsg("");
 
         const formData = new FormData(e.currentTarget);
-        const modelName = formData.get("model_id");
-        const serial = formData.get("serial_number");
-        const statusText = formData.get("warranty_status") || "Active Warranty";
+        
+        // In a real production app, you would upload 'invoiceFile' to AWS S3 here 
+        // and get a URL back. For now, we simulate it with a placeholder.
+        const fakeInvoiceUrl = invoiceFile ? `/uploads/${invoiceFile.name}` : null;
 
-        // Create the product object
-        const newProduct = {
-            id: Date.now(), // Unique ID
-            name: `${selectedCategory.name} - ${modelName}`,
-            model: `SN: ${serial}`,
-            condition: "Working Perfectly", // Default condition
-            status: statusText,
-            statusColor: statusText === "Expired" ? "bg-red-500" : "bg-emerald-600",
-            img: selectedCategory.emoji || "🔌"
+        const payload = {
+            userId: "user_123", // In real app, get this from Session
+            category: selectedCategory.name,
+            name: `${selectedCategory.name} - ${formData.get("model_id")}`,
+            model: formData.get("model_id"),
+            serialNumber: formData.get("serial_number"),
+            imeiNumber: formData.get("imei_number") || "",
+            purchaseDate: formData.get("purchase_date"),
+            warrantyStatus: formData.get("warranty_status"),
+            invoiceUrl: fakeInvoiceUrl,
+            image: selectedCategory.emoji
         };
 
-        // SAVE TO LOCAL STORAGE
-        if (typeof window !== "undefined") {
-            const existing = JSON.parse(localStorage.getItem("userRegisteredProducts") || "[]");
-            existing.push(newProduct);
-            localStorage.setItem("userRegisteredProducts", JSON.stringify(existing));
-        }
+        try {
+            const res = await fetch("/api/products/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
 
-        // Simulate API delay
-        setTimeout(() => {
-            setLoading(false);
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Something went wrong");
+            }
+
+            // Success! Move to next step
             setStep(3);
-        }, 1000); 
+        } catch (error) {
+            setErrorMsg(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     // --- STEP 1: CATEGORY SELECTION ---
@@ -118,7 +121,7 @@ export default function AddProductPage() {
     // --- STEP 2: DETAILS FORM ---
     const renderStepTwo = () => (
         <form onSubmit={handleSubmit} className="animate-fade-in-right">
-            <div className="flex items-center mb-8 pb-4 border-b border-gray-100">
+            <div className="flex items-center mb-6 pb-4 border-b border-gray-100">
                 <button type="button" onClick={() => setStep(1)} className="p-2 rounded-full hover:bg-gray-100 mr-3 -ml-2 transition-colors">
                     <ArrowLeftIcon className="h-5 w-5 text-gray-500" />
                 </button>
@@ -127,6 +130,13 @@ export default function AddProductPage() {
                     <p className="text-xs text-gray-500">Provide accurate details for better service support.</p>
                 </div>
             </div>
+
+            {errorMsg && (
+                <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                    {errorMsg}
+                </div>
+            )}
             
             <div className="space-y-4">
                 <InputField id="model_id" label="Brand & Model Name" placeholder="e.g. Samsung Galaxy S23 Ultra" />
@@ -140,9 +150,9 @@ export default function AddProductPage() {
                       <div>
                         <label htmlFor="warranty_status" className="block text-sm font-semibold text-gray-700 mb-1.5">Warranty Status</label>
                          <select id="warranty_status" name="warranty_status" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
-                            <option value="Active Warranty">Active (Under 1 Year)</option>
+                            <option value="Active">Active (Under 1 Year)</option>
                             <option value="Expired">Expired</option>
-                            <option value="Extended Warranty">Extended Warranty</option>
+                            <option value="Extended">Extended Warranty</option>
                         </select>
                     </div>
                 </div>
@@ -170,8 +180,8 @@ export default function AddProductPage() {
                 </div>
 
                 <div className="pt-6">
-                    <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-bold py-3.5 px-6 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 transform active:scale-95 disabled:bg-gray-400">
-                        {loading ? "Registering..." : "Register Product"}
+                    <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-bold py-3.5 px-6 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 transform active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        {loading ? "Registering Device..." : "Register Product"}
                     </button>
                 </div>
             </div>
@@ -187,33 +197,66 @@ export default function AddProductPage() {
             
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Successfully Registered!</h2>
             <p className="text-gray-500 mb-8 max-w-sm mx-auto">
-                Your <strong>{selectedCategory?.name}</strong> has been added to your digital garage. What would you like to do next?
+                Your <strong>{selectedCategory?.name}</strong> has been added to the database.
             </p>
 
             <div className="space-y-3">
-                <Link href="/dashboard" className="block w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors">
+                <Link href="/Dashboard" className="block w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors">
                     Return to Dashboard
                 </Link>
+                <button onClick={() => setStep(1)} className="block w-full py-3 text-gray-500 font-semibold hover:text-gray-800">
+                    Register Another Device
+                </button>
             </div>
         </div>
     );
 
     return (
-        <div className="bg-gray-50 min-h-screen font-sans flex flex-col items-center justify-center p-4">
-            {/* Header / Logo */}
-            <div className="absolute top-6 left-6 flex items-center gap-3">
+        <div className="flex min-h-screen bg-white font-sans selection:bg-blue-100">
+            <div className="hidden lg:flex w-1/2 relative bg-gray-900 overflow-hidden">
+                {/* Background Image - Replace src with your actual image path */}
+                <Image 
+                    src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop" 
+                    alt="Workspace Setup" 
+                    fill
+                    className="object-cover opacity-60"
+                    priority
+                />
+                
+                {/* Branding Overlay */}
+                <div className="relative z-10 flex flex-col justify-between w-full h-full p-12">
+                  <br />
+                  <br />
+                  
+
+                    <div className="space-y-6 max-w-lg">
+                        <div className="flex gap-1">
+                            {[1,2,3,4,5].map(i => <StarIcon key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />)}
+                        </div>
+                        <h2 className="text-4xl font-bold text-white leading-tight">
+                            &quot;The easiest way to track warranty and service history for all your electronics.&quot;
+                        </h2>
+                        <div className="flex items-center gap-4 pt-4 border-t border-white/20">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-purple-500"></div>
+                            <div>
+                                <p className="text-white font-semibold">Dhruvil Vyas</p>
+                                <p className="text-blue-200 text-sm">Product Designer</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             
+            <div className="absolute top-6 left-6 flex items-center gap-3 ">
                 <Link href="/Dashboard" className="flex items-center gap-2 group">
-                     <div className="bg-white p-1.5 rounded-full shadow-sm group-hover:shadow-md transition-shadow">
-                        <Image src="/logo.jpg" alt="ElectroCare" className="h-8 w-8 rounded-full object-cover"
-                           height={30}
-                  width={30}
-                        />
-                     </div>
-                     <span className="text-xl font-bold text-gray-900 tracking-tight">Electro<span className="text-blue-600">Care</span></span>
+                      <div className="bg-white p-1.5 rounded-full shadow-sm group-hover:shadow-md transition-shadow">
+                        <Image src="/logo.jpg" alt="ElectroCare" className="h-8 w-8 rounded-full object-cover" height={30} width={30} />
+                      </div>
+                      <span className="text-xl font-bold text-gray-900 tracking-tight">Electro<span className="text-blue-600">Care</span></span>
                 </Link>
             </div>
 
-            <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6 md:p-10 transition-all duration-300">
+            <div className="w-full lg:w-1/2 flex flex-col relative justify-center p-8 md:p-16 lg:p-24">
                 {/* Stepper Dots */}
                 <div className="flex justify-center gap-2 mb-8">
                     <div className={`h-1.5 rounded-full transition-all duration-300 ${step >= 1 ? 'w-8 bg-blue-600' : 'w-2 bg-gray-200'}`}></div>
