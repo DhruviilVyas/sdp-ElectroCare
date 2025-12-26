@@ -443,9 +443,12 @@ export default function DashboardPage() {
   // REAL API FETCH - NO MOCK DATA
   useEffect(() => {
     const fetchProducts = async () => {
+      if (!session?.user?.email) return;
       try {
-        const res = await fetch("/api/products");
-        if (res.ok) {
+const res = await fetch(`/api/products?userId=${session.user.email}`, {
+            cache: 'no-store' // Ye line zaroori hai naye data ke liye
+        });
+          if (res.ok) {
           const data = await res.json();
           setProducts(data);
         }
@@ -454,10 +457,11 @@ export default function DashboardPage() {
       } finally {
         setLoading(false);
       }
-    };
-    fetchProducts();
-  }, []);
-
+    };if (status === "authenticated") {
+        fetchProducts();
+    }
+  }, [status, session]); 
+  
   if (status === "loading") {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }

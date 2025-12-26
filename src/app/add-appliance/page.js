@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react"; 
+import { useSession } from "next-auth/react";
 import { 
     DevicePhoneMobileIcon, ComputerDesktopIcon, TvIcon,
     PhotoIcon, ArrowLeftIcon, CheckCircleIcon,
@@ -29,6 +30,7 @@ const InputField = ({ id, label, type = 'text', placeholder, required = true }) 
 );
 
 export default function AddProductPage() {
+    const { data: session } = useSession();
     const [step, setStep] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [invoiceFile, setInvoiceFile] = useState(null);
@@ -52,22 +54,31 @@ export default function AddProductPage() {
         setLoading(true);
         setErrorMsg("");
 
+        if (!session?.user?.email) {
+            setErrorMsg("You must be logged in to register a product.");
+            setLoading(false);
+            return;
+        }
+
         const formData = new FormData(e.currentTarget);
         
         // In a real production app, you would upload 'invoiceFile' to AWS S3 here 
         // and get a URL back. For now, we simulate it with a placeholder.
+
         const fakeInvoiceUrl = invoiceFile ? `/uploads/${invoiceFile.name}` : null;
 
-        const payload = {
-            userId: "user_123", // In real app, get this from Session
+     const payload = {
+            // 👇 3. REAL FIX: Session se email/id bhejein
+            userId: session.user.email, 
             category: selectedCategory.name,
+            // ... baaki fields same raheinge
             name: `${selectedCategory.name} - ${formData.get("model_id")}`,
             model: formData.get("model_id"),
             serialNumber: formData.get("serial_number"),
             imeiNumber: formData.get("imei_number") || "",
             purchaseDate: formData.get("purchase_date"),
             warrantyStatus: formData.get("warranty_status"),
-            invoiceUrl: fakeInvoiceUrl,
+            invoiceUrl: null, // Placeholder
             image: selectedCategory.emoji
         };
 
