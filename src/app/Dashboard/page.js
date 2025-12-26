@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   MapPinIcon,
   MagnifyingGlassIcon,
@@ -33,37 +36,103 @@ const getStatusColor = (status) => {
 
 // --- COMPONENTS ---
 
-const TopHeader = () => (
-  <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
-    <div className="flex items-center shrink-0">
-      <Link href="/" className="flex items-center gap-3">
-        <Image src="/logo2.png" alt="ElectroCare Logo" height={30} width={30} className="h-10 w-10 object-contain rounded-full border border-gray-100 shadow-sm"/>
-        <div className="flex items-center">
-          <span className="text-red-500 font-bold text-2xl tracking-tighter">Electro</span>
-          <span className="text-blue-600 font-bold text-2xl tracking-tighter">Care</span>
-        </div>
-      </Link>
-    </div>
-    <div className="flex items-center gap-4">
-      <div className="hidden md:flex items-center bg-gray-100 px-4 py-2 rounded-full">
-        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-2" />
-        <input type="text" placeholder="Search your products..." className="bg-transparent text-black border-none focus:ring-0 text-sm w-64 outline-none" />
-      </div>
-      <div className="flex items-center gap-4 text-sm font-medium">
-        <Link href={"/products"}>
-          <div className="hidden lg:flex items-center text-black gap-1 cursor-pointer hover:text-blue-600 border border-gray-300 px-3 py-1.5 rounded bg-white">
-            <ChartBarIcon className="h-4 w-4" /> <span>Product Listing</span>
+// FIX: Removed TypeScript syntax ": { user: any }"
+const TopHeader = ({ user }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
+      {/* Left Side: Logo */}
+      <div className="flex items-center shrink-0">
+        <Link href="/" className="flex items-center gap-3">
+          <Image
+            src="/logo2.png"
+            alt="ElectroCare Logo"
+            height={30}
+            width={30}
+            className="h-10 w-10 object-contain rounded-full border border-gray-100 shadow-sm"
+          />
+          <div className="flex items-center">
+            <span className="text-red-500 font-bold text-2xl tracking-tighter">Electro</span>
+            <span className="text-blue-600 font-bold text-2xl tracking-tighter">Care</span>
           </div>
         </Link>
       </div>
-      <button className="p-2 relative hover:bg-gray-100 rounded-full transition-colors">
-        <BellIcon className="h-6 w-6 text-gray-600" />
-        <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-      </button>
-      <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">AP</div>
-    </div>
-  </nav>
-);
+
+      {/* Right Side: Icons & User */}
+      <div className="flex items-center gap-4">
+        {/* Search Bar (Hidden on mobile) */}
+        <div className="hidden md:flex items-center bg-gray-100 px-4 py-2 rounded-full">
+          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-2" />
+          <input
+            type="text"
+            placeholder="Search your products..."
+            className="bg-transparent text-black border-none focus:ring-0 text-sm w-64 outline-none"
+          />
+        </div>
+
+        {/* Product Link */}
+        <div className="flex items-center gap-4 text-sm font-medium">
+          <Link href={"/products"}>
+            <div className="hidden lg:flex items-center text-black gap-1 cursor-pointer hover:text-blue-600 border border-gray-300 px-3 py-1.5 rounded bg-white">
+              <ChartBarIcon className="h-4 w-4" /> <span>Product Listing</span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Notification Bell */}
+        <button className="p-2 relative hover:bg-gray-100 rounded-full transition-colors">
+          <BellIcon className="h-6 w-6 text-gray-600" />
+          <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+
+        {/* ✅ USER DROPDOWN SECTION */}
+        <div className="relative">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="h-9 w-9 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm hover:ring-2 hover:ring-offset-2 hover:ring-blue-500 transition-all focus:outline-none"
+          >
+            {(user?.name ? user.name.charAt(0).toUpperCase() : "U")}
+          </button>
+
+          {/* Dropdown Menu */}
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50 origin-top-right">
+              {/* User Info Header */}
+              <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                <p className="text-sm font-bold text-gray-900 truncate">{user?.name || "Guest"}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email || ""}</p>
+              </div>
+
+              {/* Menu Items */}
+              <Link
+                href="/profile"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+              >
+                Profile Settings
+              </Link>
+              
+              <button
+                onClick={() => signOut({ callbackUrl: "/Login" })}
+                className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
+
+          {/* Close menu when clicking outside */}
+          {isMenuOpen && (
+            <div
+              className="fixed inset-0 z-40 bg-transparent"
+              onClick={() => setIsMenuOpen(false)}
+            />
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
 
 const HerServiceSection = ({ user }) => {
   const stats = { activeRepairs: 59, repairsToday: 80, avgTime: "8", saved: "5" };
@@ -239,13 +308,12 @@ const LiveTrackingMap = () => (
        <div className="flex items-center gap-3 mb-2">
          <div className="h-8 w-8 bg-gray-200 rounded-full overflow-hidden">
           <Image
-  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh`}
-  alt="Avatar"
-  width={40}
-  height={40}
-  unoptimized
-/>
-
+            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh`}
+            alt="Avatar"
+            width={40}
+            height={40}
+            unoptimized
+          />
          </div>
          <div><h4 className="font-bold text-gray-800 text-sm">Rajesh Kumar</h4><p className="text-[10px] text-emerald-600 font-bold flex items-center"><ShieldCheckIcon className="h-3 w-3 mr-1" /> Vaccinated</p></div>
        </div>
@@ -361,9 +429,16 @@ const Footer = () => (
 
 // --- MAIN PAGE ---
 export default function DashboardPage() {
-  const [user] = useState({ name: "Abhay Parmar" });
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/Login");
+    }
+  }, [status, router]);
 
   // REAL API FETCH - NO MOCK DATA
   useEffect(() => {
@@ -383,21 +458,29 @@ export default function DashboardPage() {
     fetchProducts();
   }, []);
 
+  if (status === "loading") {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!session) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      <TopHeader />
+      <TopHeader user={session.user} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <div className="flex justify-between items-end">
            <div>
-             <h1 className="text-xl font-bold text-gray-800">Welcome, {user.name}</h1>
+             <h1 className="text-xl font-bold text-gray-800">Welcome, {session.user?.name}</h1>
              <p className="text-sm text-gray-500">Ahmedabad &gt; Dashboard</p>
            </div>
            <p className="text-xs font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full animate-pulse">
              ● System Operational
            </p>
         </div>
-        <HerServiceSection user={user} />
+        <HerServiceSection user={session.user} />
         
         {/* Pass fetched products to component */}
         <RegisteredProducts products={products} loading={loading} />
