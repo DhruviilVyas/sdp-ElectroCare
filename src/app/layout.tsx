@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono } from "next/font/google";
+// 1. Google fonts import ko hatao ya comment karo
+// import { Inter, Roboto_Mono } from "next/font/google"; 
 import "./globals.css";
-// 👇 Import the wrapper you just created
 import SessionWrapper from "@/components/SessionWrapper"; 
 
+// 2. Ye configurations bhi hata do
+/*
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
@@ -13,6 +15,7 @@ const robotoMono = Roboto_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
 });
+*/
 
 export const metadata: Metadata = {
   title: "ElectroCare",
@@ -26,10 +29,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.variable} ${robotoMono.variable} antialiased`}
-      >
-        {/* 👇 Wrap the children here */}
+      {/* 3. ClassName se variables hata do */}
+      <body className="antialiased">
         <SessionWrapper>
           {children}
         </SessionWrapper>

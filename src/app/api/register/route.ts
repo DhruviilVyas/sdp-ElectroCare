@@ -6,7 +6,20 @@ import bcrypt from "bcryptjs";
 export async function POST(req: Request) {
   try {
     // 1. Get phone along with other fields
-    const { name, email, phone, password } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    }catch (error) {
+  console.error("API Error:", error);
+
+  return NextResponse.json(
+    { error: "Internal Server Error" },
+    { status: 500 }
+  );
+}
+
+    
+    const { name, email, phone, password } = body || {};
 
     if (!name || !email || !phone || !password) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

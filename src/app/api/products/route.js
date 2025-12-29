@@ -48,7 +48,13 @@ export async function GET(req) {
     
     return NextResponse.json(productsWithStatus, { status: 200 });
 
-  } catch (error) {
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
-  }
+  }catch (error) {
+  console.error("API Error:", error);
+
+  return NextResponse.json(
+    { error: "Internal Server Error" },
+    { status: 500 }
+  );
+}
+
 }

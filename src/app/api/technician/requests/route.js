@@ -10,7 +10,13 @@ export async function GET() {
     // Fetch all requests
     const requests = await ServiceRequest.find().sort({ createdAt: -1 });
     return NextResponse.json(requests, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
-  }
+  }catch (error) {
+  console.error("API Error:", error);
+
+  return NextResponse.json(
+    { error: "Internal Server Error" },
+    { status: 500 }
+  );
+}
+
 }

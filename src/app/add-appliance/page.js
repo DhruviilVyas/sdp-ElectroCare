@@ -65,7 +65,6 @@ export default function AddProductPage() {
         // In a real production app, you would upload 'invoiceFile' to AWS S3 here 
         // and get a URL back. For now, we simulate it with a placeholder.
 
-        const fakeInvoiceUrl = invoiceFile ? `/uploads/${invoiceFile.name}` : null;
 
      const payload = {
             // 👇 3. REAL FIX: Session se email/id bhejein

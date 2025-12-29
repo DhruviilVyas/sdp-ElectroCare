@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { 
-    BellIcon, CalendarDaysIcon, CheckCircleIcon, CurrencyRupeeIcon,
+  CheckCircleIcon, 
     MapPinIcon, UserCircleIcon, XCircleIcon, BriefcaseIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
@@ -46,7 +46,7 @@ export default function TechnicianDashboardPage() {
                 fetchRequests(); // Refresh list
             }
         } catch (error) {
-            alert("Action failed");
+            alert("Action failed",error);
         }
     };
 

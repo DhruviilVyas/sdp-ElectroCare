@@ -21,15 +21,19 @@ export const authOptions: AuthOptions = {
         password: {},
       },
       async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
+        
         await connectDB();
         
-        const user = await User.findOne({ email: credentials?.email });
+        const user = await User.findOne({ email: credentials.email });
 
         if (!user) {
           throw new Error("No user found with this email");
         }
 
-        const isValid = await bcrypt.compare(credentials?.password || "", user.password);
+        const isValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValid) {
           throw new Error("Invalid password");
@@ -39,7 +43,7 @@ export const authOptions: AuthOptions = {
       },
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET, 
+  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development-only", 
 };
 
 const handler = NextAuth(authOptions);

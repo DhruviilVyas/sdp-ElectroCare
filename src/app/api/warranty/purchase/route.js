@@ -6,9 +6,25 @@ import { addYears } from "date-fns";
 import mongoose from "mongoose";
 export async function POST(req) {
   try {
-    await connectDB();
-    const body = await req.json();
-    const { productId, planName, planDuration, amount } = body;
+  await connectDB();
+
+  let body;
+  try {
+    body = await req.json();
+  } catch (e) {
+    console.error("Invalid JSON body:", e);
+    return NextResponse.json(
+      { error: "Invalid JSON" },
+      { status: 400 }
+    );
+  }
+    
+    const { productId, planName, planDuration, amount } = body || {};
+
+    // Validate required fields
+    if (!productId || !planName || !planDuration || !amount) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
 
     // 1. Validate ID
     if (!mongoose.Types.ObjectId.isValid(productId)) {

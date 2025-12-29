@@ -14,10 +14,22 @@ export async function POST(req) {
     }
 
     // 2. Parse Input
-    const body = await req.json();
-    const { problem } = body;
+    let body;
+    try {
+      body = await req.json();
+    } catch (error) {
+  console.error("API Error:", error);
 
-    if (!problem) {
+  return NextResponse.json(
+    { error: "Internal Server Error" },
+    { status: 500 }
+  );
+}
+
+    
+    const { problem } = body || {};
+
+    if (!problem || typeof problem !== 'string' || problem.trim().length === 0) {
       return NextResponse.json({ error: "Please describe the problem." }, { status: 400 });
     }
 

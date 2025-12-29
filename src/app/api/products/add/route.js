@@ -5,10 +5,20 @@ export const dynamic = 'force-dynamic';
 export async function POST(req) {
   try {
     await connectDB();
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    }catch (error) {
+  console.error("API Error:", error);
+
+  return NextResponse.json(
+    { error: "Internal Server Error" },
+    { status: 500 }
+  );
+}
 
     // 1. Validate
-    if (!body.model || !body.serialNumber || !body.warrantyStatus) {
+    if (!body?.model || !body?.serialNumber || !body?.warrantyStatus) {
        return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -42,7 +52,9 @@ export async function POST(req) {
     console.error("Registration Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}export async function GET(req) {
+}
+
+export async function GET(req) {
   try {
     await connectDB();
 

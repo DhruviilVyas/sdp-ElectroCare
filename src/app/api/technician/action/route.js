@@ -6,7 +6,12 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     await connectDB();
-    const { requestId, action } = await req.json(); 
+    const body = await req.json();
+    const { requestId, action } = body || {};
+
+    if (!requestId || !action) {
+      return NextResponse.json({ error: "Missing requestId or action" }, { status: 400 });
+    }
 
     const request = await ServiceRequest.findById(requestId);
     if (!request) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -27,17 +32,21 @@ export async function POST(req) {
       await request.save();
 
       // --- LOYALTY POINTS LOGIC ---
-      const user = await User.findOne({ email: request.userId });
-      if (user) {
-        user.loyalty_points = (user.loyalty_points || 0) + 100;
-        await user.save();
+      if (request?.userId) {
+        const user = await User.findOne({ email: request.userId });
+        if (user) {
+          user.loyalty_points = (user.loyalty_points || 0) + 100;
+          await user.save();
+        }
       }
+    } else {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
     return NextResponse.json({ message: "Status updated" }, { status: 200 });
 
   } catch (error) {
     console.error("Technician Action Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Internal server error" }, { status: 500 });
   }
 }

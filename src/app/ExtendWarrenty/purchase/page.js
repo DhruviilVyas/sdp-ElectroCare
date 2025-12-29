@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react"; // ✅ Added Suspense
 import { useSession } from "next-auth/react"; 
 import { useRouter, useSearchParams } from "next/navigation"; 
 import {
@@ -53,13 +53,12 @@ const Navbar = () => (
   </nav>
 );
 
-// --- MAIN PAGE ---
-export default function WarrantyPurchaseFlow() {
+// --- MAIN CONTENT LOGIC (Moved here) ---
+function PurchaseContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // ✅ Safe to use here now
   
-  // Logic: If URL has ?productId=..., pre-select that product if eligible
   const preSelectedId = searchParams.get('productId');
 
   const [step, setStep] = useState(1);
@@ -91,7 +90,6 @@ export default function WarrantyPurchaseFlow() {
           const data = await res.json();
           setDbProducts(data);
 
-          // Auto-select if coming from link and not protected
           if (preSelectedId) {
              const preProd = data.find(p => p._id === preSelectedId);
              if (preProd && !preProd.hasActiveWarranty) {
@@ -133,21 +131,19 @@ export default function WarrantyPurchaseFlow() {
       const result = await res.json();
 
       if (!res.ok) {
-         // Show specific backend error (e.g., "Already protected")
          throw new Error(result.error || "Payment failed");
       }
 
       setFinalWarranty(result); 
       setStep(4);
     } catch (error) {
-      alert(error.message); // Show actual error message
+      alert(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- STEPS ---
-
+  // --- STEPS RENDERERS ---
   const StepProduct = () => (
     <div className="animate-fade-in-up">
       <h2 className="text-2xl font-bold text-gray-900 mb-2">Protect a Device</h2>
@@ -170,10 +166,8 @@ export default function WarrantyPurchaseFlow() {
                   key={prod._id} 
                   onClick={() => { 
                       if (isProtected) {
-                          // Redirect to details if already protected
                           router.push(`/products/${prod._id}`);
                       } else {
-                          // Proceed to buy if eligible
                           setSelectedProduct(prod); 
                           setStep(2); 
                       }
@@ -222,9 +216,6 @@ export default function WarrantyPurchaseFlow() {
     </div>
   );
 
-  // ... (StepPlan, StepPayment, StepSuccess remain same as previous, they are fine) ...
-  // Re-pasting StepPlan, StepPayment, StepSuccess for completeness 
-  
   const StepPlan = () => (
     <div className="animate-fade-in-up">
       <div className="flex items-center gap-4 mb-6">
@@ -329,5 +320,14 @@ export default function WarrantyPurchaseFlow() {
         </main>
       </div>
     </div>
+  );
+}
+
+// --- MAIN EXPORT WITH SUSPENSE (This Fixes the Build) ---
+export default function WarrantyPurchaseFlow() {
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading Page...</div>}>
+      <PurchaseContent />
+    </Suspense>
   );
 }

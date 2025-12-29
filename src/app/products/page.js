@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import {
   WrenchScrewdriverIcon, DocumentTextIcon, ArrowDownTrayIcon, PlusIcon, ShieldCheckIcon, TruckIcon,
-  ClockIcon, PhoneIcon, SparklesIcon, ChevronRightIcon
+  ClockIcon, PhoneIcon, SparklesIcon, ChevronRightIcon, MapPinIcon
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { format } from "date-fns";
 
 // --- SUB COMPONENTS (Reused) ---
 const GarageHero = () => (
@@ -81,9 +80,11 @@ const ActiveServiceSection = ({ userEmail }) => {
       <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar md:grid md:grid-cols-2 lg:grid-cols-3">
         
         {requests.map((req) => {
+           if (!req?._id) return null;
+           
            // Status Styling Logic
-           const isTechAssigned = ['upcoming', 'on_way', 'in_progress', 'accepted'].includes(req.status);
-           const isOnWay = req.status === 'on_way';
+           const isTechAssigned = ['upcoming', 'on_way', 'in_progress', 'accepted'].includes(req?.status || '');
+           const isOnWay = req?.status === 'on_way';
            
            return (
              <div key={req._id} className="min-w-[300px] md:min-w-0 snap-center bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden relative">
@@ -93,10 +94,10 @@ const ActiveServiceSection = ({ userEmail }) => {
                    <div className="flex items-center gap-2">
                       {isOnWay ? <div className="animate-bounce"><MapPinIcon className="h-5 w-5 text-green-600"/></div> : <ClockIcon className="h-5 w-5 text-gray-500"/>}
                       <span className={`text-xs font-bold uppercase tracking-wider ${isOnWay ? 'text-green-700' : 'text-gray-600'}`}>
-                         {req.status === 'pending' ? 'Looking for Tech' : req.status.replace('_', ' ')}
+                         {req?.status === 'pending' ? 'Looking for Tech' : (req?.status || '').replace('_', ' ')}
                       </span>
                    </div>
-                   <span className="text-[10px] text-gray-400 font-mono">#{req._id.slice(-4).toUpperCase()}</span>
+                   <span className="text-[10px] text-gray-400 font-mono">#{req._id?.slice(-4)?.toUpperCase() || 'N/A'}</span>
                 </div>
 
                 <div className="p-5">
@@ -106,8 +107,8 @@ const ActiveServiceSection = ({ userEmail }) => {
                          📦 
                       </div>
                       <div>
-                         <h4 className="font-bold text-gray-800 line-clamp-1">{req.productName}</h4>
-                         <p className="text-xs text-gray-500 line-clamp-1">{req.issueDescription}</p>
+                         <h4 className="font-bold text-gray-800 line-clamp-1">{req?.productName || "Product"}</h4>
+                         <p className="text-xs text-gray-500 line-clamp-1">{req?.issueDescription || "No description"}</p>
                       </div>
                    </div>
 
@@ -115,15 +116,17 @@ const ActiveServiceSection = ({ userEmail }) => {
                    {isTechAssigned ? (
                       <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-3">
                          <div className="h-10 w-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-bold">
-                            {req.technicianName ? req.technicianName.charAt(0) : "T"}
+                            {req?.technicianName ? req.technicianName.charAt(0) : "T"}
                          </div>
                          <div className="flex-1">
                             <p className="text-xs text-blue-500 font-bold uppercase">Technician</p>
-                            <p className="text-sm font-bold text-gray-800">{req.technicianName || "Assigned"}</p>
+                            <p className="text-sm font-bold text-gray-800">{req?.technicianName || "Assigned"}</p>
                          </div>
-                         <a href={`tel:${req.technicianPhone}`} className="bg-white p-2 rounded-full shadow-sm text-green-600 hover:bg-green-50 transition-colors">
-                            <PhoneIcon className="h-5 w-5" />
-                         </a>
+                         {req?.technicianPhone && (
+                           <a href={`tel:${req.technicianPhone}`} className="bg-white p-2 rounded-full shadow-sm text-green-600 hover:bg-green-50 transition-colors">
+                              <PhoneIcon className="h-5 w-5" />
+                           </a>
+                         )}
                       </div>
                    ) : (
                       <div className="bg-yellow-50 rounded-xl p-3 flex items-center gap-3 border border-yellow-100 border-dashed">
@@ -134,11 +137,13 @@ const ActiveServiceSection = ({ userEmail }) => {
                 </div>
 
                 {/* Footer Action */}
-                <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 text-center">
-                   <Link href={`/products/${req.productId}`} className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1">
-                      View Full Details <ChevronRightIcon className="h-3 w-3"/>
-                   </Link>
-                </div>
+                {req?.productId && (
+                  <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 text-center">
+                     <Link href={`/products/${req.productId}`} className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1">
+                        View Full Details <ChevronRightIcon className="h-3 w-3"/>
+                     </Link>
+                  </div>
+                )}
              </div>
            );
         })}
@@ -162,9 +167,9 @@ const InvoiceVault = ({ products }) => {
               <tbody className="text-sm text-gray-700">
                  {productsWithInvoices.length === 0 ? <tr><td colSpan="2" className="px-6 py-8 text-center text-gray-400">No invoices yet.</td></tr> : 
                     productsWithInvoices.map(p => (
-                       <tr key={p._id} className="border-b border-gray-100">
-                          <td className="px-6 py-4">{p.name} Invoice</td>
-                          <td className="px-6 py-4"><a href={p.invoiceUrl} target="_blank" className="text-blue-600 font-bold flex items-center gap-1"><ArrowDownTrayIcon className="h-4 w-4"/> View</a></td>
+                       <tr key={p?._id} className="border-b border-gray-100">
+                          <td className="px-6 py-4">{p?.name || "Product"} Invoice</td>
+                          <td className="px-6 py-4">{p?.invoiceUrl ? <a href={p.invoiceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold flex items-center gap-1"><ArrowDownTrayIcon className="h-4 w-4"/> View</a> : "N/A"}</td>
                        </tr>
                     ))
                  }
@@ -199,13 +204,15 @@ const ProductGrid = ({ products, loading }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
            {products.map((product) => {
               // Status Logic
-              const isServiceActive = product.hasActiveService;
-              const isProtected = product.hasActiveWarranty || product.warrantyStatus === 'active';
+              const isServiceActive = product?.hasActiveService;
+              const isProtected = product?.hasActiveWarranty || product?.warrantyStatus === 'active';
               
               // Dynamic Border Color
               let cardBorder = "border-gray-200";
               if (isServiceActive) cardBorder = "border-orange-400 ring-1 ring-orange-100"; // Highlight active service
               else if (isProtected) cardBorder = "border-emerald-200";
+
+              if (!product?._id) return null;
 
               return (
                 <div key={product._id} className={`group bg-white rounded-2xl border ${cardBorder} overflow-hidden hover:shadow-xl transition-all duration-300 relative flex flex-col h-full`}>
@@ -219,20 +226,20 @@ const ProductGrid = ({ products, loading }) => {
                       )}
                       {!isServiceActive && (
                         <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase text-white shadow-sm ${isProtected ? "bg-emerald-600" : "bg-blue-600"}`}>
-                           {isProtected ? "Protected" : product.warrantyStatus}
+                           {isProtected ? "Protected" : product?.warrantyStatus || "Unknown"}
                         </div>
                       )}
                    </div>
 
                    {/* Image */}
                    <div className="h-48 bg-gray-50 flex items-center justify-center relative">
-                      <span className="text-7xl group-hover:scale-110 transition-transform duration-500">{product.image || "📦"}</span>
+                      <span className="text-7xl group-hover:scale-110 transition-transform duration-500">{product?.image || "📦"}</span>
                    </div>
                    
                    {/* Info */}
                    <div className="p-5 flex-1 flex flex-col">
-                      <h3 className="font-bold text-gray-900 line-clamp-1">{product.name}</h3>
-                      <p className="text-xs text-gray-500 mb-4">{product.model}</p>
+                      <h3 className="font-bold text-gray-900 line-clamp-1">{product?.name || "Unnamed Product"}</h3>
+                      <p className="text-xs text-gray-500 mb-4">{product?.model || "N/A"}</p>
                       
                       <div className="grid grid-cols-2 gap-2 mt-auto">
                          <Link href={`/products/${product._id}`}>

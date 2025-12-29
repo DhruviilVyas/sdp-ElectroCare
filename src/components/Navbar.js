@@ -71,13 +71,13 @@ export default function Navbar() {
             <>
               <div className="absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-xl border py-2 z-50">
                 <div className="px-4 py-2 border-b">
-                  <p className="font-semibold truncate">{user?.name || "Guest"}</p>
+                  <p className="font-semibold truncate text-black">{user?.name || "Guest"}</p>
                   <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
 
                 <Link
                   href="/profile"
-                  className="block px-4 py-2 text-sm hover:bg-blue-50"
+                  className="block px-4 py-2 text-sm hover:bg-blue-50 text-black"
                 >
                   Profile Settings
                 </Link>

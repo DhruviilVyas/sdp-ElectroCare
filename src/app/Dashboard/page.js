@@ -3,17 +3,14 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import {
   MapPinIcon,
-  MagnifyingGlassIcon,
-  BellIcon,
+  
   SparklesIcon,
   WrenchScrewdriverIcon,
   ArchiveBoxIcon,
   BoltIcon,
   ClockIcon,
-  ChartBarIcon,
   PhoneIcon,
   DocumentTextIcon,
   ArrowUpTrayIcon,
@@ -30,14 +27,6 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 
-// --- HELPERS ---
-const getStatusColor = (status) => {
-  const s = status?.toLowerCase() || "";
-  if (s.includes("active")) return "bg-emerald-600";
-  if (s.includes("expired")) return "bg-red-500";
-  if (s.includes("service")) return "bg-orange-500";
-  return "bg-blue-600";
-};
 
 import Navbar from "@/components/Navbar";
 // --- COMPONENTS ---
@@ -158,34 +147,34 @@ const HerServiceSection = ({ user }) => {
             {displayedProducts.map((product) => {
               
               // 1. Check Status
-              const isProtected = product.hasActiveWarranty || product.hasExtendedWarranty || product.warrantyStatus === 'active';
+              const isProtected = product?.hasActiveWarranty || product?.hasExtendedWarranty || product?.warrantyStatus === 'active';
               
               // 2. Status Badge Color
               let statusColor = "bg-blue-600"; 
               if (isProtected) statusColor = "bg-emerald-600";
-              else if (product.warrantyStatus === 'Expired') statusColor = "bg-red-500";
+              else if (product?.warrantyStatus === 'Expired') statusColor = "bg-red-500";
 
               return (
-                <div key={product._id} className="bg-white border border-gray-200 rounded-lg p-4 relative hover:shadow-md transition-all group flex flex-col justify-between">
+                <div key={product?._id} className="bg-white border border-gray-200 rounded-lg p-4 relative hover:shadow-md transition-all group flex flex-col justify-between">
                   
                   {/* Badge */}
                   <div className={`absolute top-4 left-0 px-3 py-1 text-[10px] font-bold text-white rounded-r-md uppercase tracking-wide shadow-sm ${statusColor}`}>
-                    {isProtected ? "Protected" : product.warrantyStatus}
+                    {isProtected ? "Protected" : product?.warrantyStatus || "Unknown"}
                   </div>
 
                   {/* Image */}
                   <div className="h-32 md:h-40 flex items-center justify-center my-4 bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
                     <span className="text-5xl md:text-6xl filter drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300">
-                      {product.image || "📦"}
+                      {product?.image || "📦"}
                     </span>
                   </div>
 
                   {/* Details */}
                   <div className="space-y-1 mb-4">
                     <h4 className="text-sm font-bold text-gray-800 line-clamp-2 h-10 leading-snug">
-                      {product.name}
+                      {product?.name || "Unnamed Product"}
                     </h4>
-                    <p className="text-xs text-gray-500 truncate">{product.model}</p>
+                    <p className="text-xs text-gray-500 truncate">{product?.model || "N/A"}</p>
                   </div>
 
                   {/* Footer Actions */}
@@ -203,11 +192,13 @@ const HerServiceSection = ({ user }) => {
                     <div className="flex gap-2">
                         
                         {/* Details Button (Always Visible) */}
-                        <Link href={`/products/${product._id}`}>
-                           <button className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded hover:bg-gray-200 transition-colors">
-                             Details
-                           </button>
-                        </Link>
+                        {product?._id && (
+                          <Link href={`/products/${product._id}`}>
+                             <button className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded hover:bg-gray-200 transition-colors">
+                               Details
+                             </button>
+                          </Link>
+                        )}
 
                         {/* LOGIC CHANGE: 
                             - Agar Protected hai -> To 'Repair' dikhao.
@@ -221,12 +212,14 @@ const HerServiceSection = ({ user }) => {
                              </button>
                            </Link>
                         ) : (
-                           <Link href={`/ExtendWarrenty/purchase?productId=${product._id}`}>
-                             <button className="px-3 py-1.5 border border-blue-500 text-blue-600 text-[10px] font-bold rounded hover:bg-blue-50 transition-colors flex items-center gap-1">
-                               <ShieldCheckIcon className="h-3 w-3" />
-                               <span>Extend</span>
-                             </button>
-                           </Link>
+                           product?._id && (
+                             <Link href={`/ExtendWarrenty/purchase?productId=${product._id}`}>
+                               <button className="px-3 py-1.5 border border-blue-500 text-blue-600 text-[10px] font-bold rounded hover:bg-blue-50 transition-colors flex items-center gap-1">
+                                 <ShieldCheckIcon className="h-3 w-3" />
+                                 <span>Extend</span>
+                               </button>
+                             </Link>
+                           )
                         )}
                     </div>
 
@@ -357,9 +350,11 @@ const AiBanner = () => {
       } else {
         setResponse("Error: " + data.error);
       }
-    } catch (err) {
-      setResponse("Connection failed. Please try again.");
-    } finally {
+    } catch (error) {
+  console.error("API Error:", error);
+}
+
+    finally {
       setLoading(false);
     }
   };
@@ -434,7 +429,7 @@ const AiBanner = () => {
               ) : (
                 <form onSubmit={handleDiagnosis}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Describe the problem (e.g., "Washing machine making loud banging noise")
+                    Describe the problem (e.g., &quot;Washing machine making loud banging noise&quot;)
                   </label>
                   <textarea
                     rows={4}
