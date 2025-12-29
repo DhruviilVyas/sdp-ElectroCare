@@ -4,7 +4,6 @@ import Product from "@/models/Product";
 import { NextResponse } from "next/server";
 import { addYears } from "date-fns";
 import mongoose from "mongoose";
-
 export async function POST(req) {
   try {
     await connectDB();
@@ -16,6 +15,15 @@ export async function POST(req) {
       return NextResponse.json({ error: "Invalid Product ID" }, { status: 400 });
     }
 
+    const existingWarranty = await Warranty.findOne({
+      productId: productId,
+      status: 'active',
+      endDate: { $gte: new Date() }
+    });
+
+    if (existingWarranty) {
+      return NextResponse.json({ error: "This product is already protected." }, { status: 409 });
+    }
     // 2. Find Product
     const product = await Product.findById(productId);
     if (!product) {

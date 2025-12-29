@@ -53,14 +53,17 @@ const WarrantyHero = () => (
       </div>
       
       <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-        <Link href="/add-appliance">
+        <Link href="/ExtendWarrenty/purchase">
             <button className="w-full md:w-auto bg-white text-gray-900 hover:bg-gray-100 font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all transform hover:scale-105 shadow-xl">
             <CheckBadgeIcon className="h-5 w-5" /> Check Eligibility
             </button>
         </Link>
+                <Link href="/ExtendWarrenty/purchase">
+
         <button className="w-full md:w-auto bg-blue-600 text-white hover:bg-blue-700 font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all transform hover:scale-105 shadow-xl shadow-blue-900/20">
            View Plans
         </button>
+        </Link>
       </div>
     </div>
   </section>
@@ -115,7 +118,10 @@ const WhyUsSection = () => (
 
 // 3. COMPARISON SECTION
 const ComparisonSection = () => (
+
     <section className="py-24 bg-white">
+                    <Link href="/ExtendWarrenty/purchase">
+
         <div className="container mx-auto px-6 max-w-5xl">
             <div className="bg-gray-900 rounded-[2.5rem] p-8 md:p-16 text-white shadow-2xl relative overflow-hidden">
                 <div className="relative z-10">
@@ -153,6 +159,8 @@ const ComparisonSection = () => (
                 </div>
             </div>
         </div>
+                    </Link>
+
     </section>
 );
 
@@ -165,6 +173,8 @@ const PricingSection = () => {
                     <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
                     <p className="text-gray-500">Choose a plan that fits your gadgets.</p>
                 </div>
+                                    <Link href="/ExtendWarrenty/purchase">
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {[
                         { name: "Starter", price: "₹1,999", device: "1 Device", color: "bg-white", btn: "bg-gray-100 text-gray-900 hover:bg-gray-200" },
@@ -191,6 +201,7 @@ const PricingSection = () => {
                         </div>
                     ))}
                 </div>
+                                    </Link>
             </div>
         </section>
     );

@@ -1,50 +1,25 @@
 "use client";
 import Navbar from "@/components/Navbar";
-
+import { useSession } from "next-auth/react"; 
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import {
-  WrenchScrewdriverIcon,
-  DocumentTextIcon,
-  ArrowDownTrayIcon,
-  FunnelIcon,
-  PlusIcon,
-  ShieldCheckIcon,
-  EllipsisHorizontalIcon,
+  WrenchScrewdriverIcon, DocumentTextIcon, ArrowDownTrayIcon, PlusIcon, ShieldCheckIcon, TruckIcon,
+  ClockIcon, PhoneIcon, SparklesIcon, ChevronRightIcon
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// --- HELPERS ---
-const getStatusColor = (status) => {
-  const s = status?.toLowerCase() || "";
-  if (s.includes("active")) return "text-emerald-600 bg-emerald-50";
-  if (s.includes("expired")) return "text-red-600 bg-red-50";
-  return "text-blue-600 bg-blue-50";
-};
-
-// --- COMPONENTS ---
-
+// --- SUB COMPONENTS (Reused) ---
 const GarageHero = () => (
   <section className="bg-gray-900 text-white py-12 md:py-16 px-6 md:px-12 relative overflow-hidden">
     <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
     <div className="absolute bottom-0 left-0 w-72 h-72 bg-purple-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
     <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-end gap-8">
       <div>
         <p className="text-blue-400 font-bold tracking-wide uppercase text-sm mb-2">My Digital Garage</p>
         <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">All your devices,<br/>managed in one place.</h1>
-        <div className="flex flex-wrap gap-6 mt-6">
-          <div className="flex items-center gap-2">
-             <div className="p-2 bg-gray-800 rounded-lg"><ShieldCheckIcon className="h-5 w-5 text-green-400" /></div>
-             <div><p className="text-xs text-gray-400">Protection Value</p><p className="font-bold text-sm md:text-base">₹2,64,380</p></div>
-          </div>
-          <div className="flex items-center gap-2">
-             <div className="p-2 bg-gray-800 rounded-lg"><DocumentTextIcon className="h-5 w-5 text-blue-400" /></div>
-             <div><p className="text-xs text-gray-400">Total Documents</p><p className="font-bold text-sm md:text-base">Safe & Secure</p></div>
-          </div>
-        </div>
       </div>
-      
       <Link href="/add-appliance" className="w-full md:w-auto">
         <button className="w-full md:w-auto bg-white text-gray-900 hover:bg-gray-100 font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all transform hover:scale-105 shadow-xl">
           <PlusIcon className="h-5 w-5" /> Add New Product
@@ -53,199 +28,272 @@ const GarageHero = () => (
     </div>
   </section>
 );
+// --- UPDATED ACTIVE SERVICE SECTION ---
+const ActiveServiceSection = ({ userEmail }) => {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-// Placeholder for future Service integration (Static for now)
-const ActiveServiceSection = () => (
+  // Auto-Fetch Requests
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!userEmail) return;
+      try {
+        const res = await fetch(`/api/service/list?userId=${userEmail}`);
+        if (res.ok) {
+          setRequests(await res.json());
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequests();
+    // Real-time feel ke liye har 10 second me refresh karo
+    const interval = setInterval(fetchRequests, 10000); 
+    return () => clearInterval(interval);
+  }, [userEmail]);
+
+  if (loading) return (
   <section className="max-w-7xl mx-auto px-6 -mt-8 relative z-20 mb-12">
-    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-      <div className="bg-orange-50 px-6 py-3 border-b border-orange-100 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-orange-800 font-bold text-sm md:text-base">
-          <WrenchScrewdriverIcon className="h-5 w-5 animate-pulse" />
-          <span>Live Service Updates</span>
+           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 h-32 animate-pulse flex items-center justify-center">
+          <span className="text-gray-400 text-sm">Syncing status...</span>
+       </div>
+    </section>
+  );
+
+  // Agar koi request nahi hai, to Section ko hide kar do ya "All Good" dikhao
+  if (requests.length === 0) return null;
+
+  return (
+    <section className="max-w-7xl mx-auto px-4 md:px-6 -mt-12 relative z-20 mb-10">
+      
+      <div className="flex items-center gap-2 mb-4">
+         <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+         </span>
+         <h3 className="text-white font-bold text-lg drop-shadow-md">Active Service Requests</h3>
+      </div>
+
+      {/* Horizontal Scroll Container for Mobile */}
+      <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar md:grid md:grid-cols-2 lg:grid-cols-3">
+        
+        {requests.map((req) => {
+           // Status Styling Logic
+           const isTechAssigned = ['upcoming', 'on_way', 'in_progress', 'accepted'].includes(req.status);
+           const isOnWay = req.status === 'on_way';
+           
+           return (
+             <div key={req._id} className="min-w-[300px] md:min-w-0 snap-center bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden relative">
+                
+                {/* Status Header */}
+                <div className={`px-5 py-3 border-b flex justify-between items-center ${isOnWay ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-100'}`}>
+                   <div className="flex items-center gap-2">
+                      {isOnWay ? <div className="animate-bounce"><MapPinIcon className="h-5 w-5 text-green-600"/></div> : <ClockIcon className="h-5 w-5 text-gray-500"/>}
+                      <span className={`text-xs font-bold uppercase tracking-wider ${isOnWay ? 'text-green-700' : 'text-gray-600'}`}>
+                         {req.status === 'pending' ? 'Looking for Tech' : req.status.replace('_', ' ')}
+                      </span>
+                   </div>
+                   <span className="text-[10px] text-gray-400 font-mono">#{req._id.slice(-4).toUpperCase()}</span>
+                </div>
+
+                <div className="p-5">
+                   {/* Product Info */}
+                   <div className="flex items-start gap-4 mb-4">
+                      <div className="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl shrink-0">
+                         📦 
+                      </div>
+                      <div>
+                         <h4 className="font-bold text-gray-800 line-clamp-1">{req.productName}</h4>
+                         <p className="text-xs text-gray-500 line-clamp-1">{req.issueDescription}</p>
+                      </div>
+                   </div>
+
+                   {/* Technician Info (Real or Placeholder) */}
+                   {isTechAssigned ? (
+                      <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-3">
+                         <div className="h-10 w-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-bold">
+                            {req.technicianName ? req.technicianName.charAt(0) : "T"}
+                         </div>
+                         <div className="flex-1">
+                            <p className="text-xs text-blue-500 font-bold uppercase">Technician</p>
+                            <p className="text-sm font-bold text-gray-800">{req.technicianName || "Assigned"}</p>
+                         </div>
+                         <a href={`tel:${req.technicianPhone}`} className="bg-white p-2 rounded-full shadow-sm text-green-600 hover:bg-green-50 transition-colors">
+                            <PhoneIcon className="h-5 w-5" />
+                         </a>
+                      </div>
+                   ) : (
+                      <div className="bg-yellow-50 rounded-xl p-3 flex items-center gap-3 border border-yellow-100 border-dashed">
+                         <div className="animate-spin-slow"><SparklesIcon className="h-5 w-5 text-yellow-500"/></div>
+                         <p className="text-xs text-yellow-700 font-medium">Matching with best expert nearby...</p>
+                      </div>
+                   )}
+                </div>
+
+                {/* Footer Action */}
+                <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 text-center">
+                   <Link href={`/products/${req.productId}`} className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1">
+                      View Full Details <ChevronRightIcon className="h-3 w-3"/>
+                   </Link>
+                </div>
+             </div>
+           );
+        })}
+      </div>
+    </section>
+  );
+};
+const InvoiceVault = ({ products }) => {
+  const productsWithInvoices = products.filter(p => p.invoiceUrl);
+  return (
+    <section className="bg-gray-50 py-16 md:py-20 px-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between mb-8 items-center">
+           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><DocumentTextIcon className="h-6 w-6 text-blue-600" /> Document Vault</h2>
         </div>
-        <span className="text-xs font-semibold bg-white px-2 py-1 rounded text-orange-600">Demo</span>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden overflow-x-auto">
+           <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-200">
+                 <tr><th className="px-6 py-4">Name</th><th className="px-6 py-4">Action</th></tr>
+              </thead>
+              <tbody className="text-sm text-gray-700">
+                 {productsWithInvoices.length === 0 ? <tr><td colSpan="2" className="px-6 py-8 text-center text-gray-400">No invoices yet.</td></tr> : 
+                    productsWithInvoices.map(p => (
+                       <tr key={p._id} className="border-b border-gray-100">
+                          <td className="px-6 py-4">{p.name} Invoice</td>
+                          <td className="px-6 py-4"><a href={p.invoiceUrl} target="_blank" className="text-blue-600 font-bold flex items-center gap-1"><ArrowDownTrayIcon className="h-4 w-4"/> View</a></td>
+                       </tr>
+                    ))
+                 }
+              </tbody>
+           </table>
+        </div>
       </div>
-      <div className="p-6 text-center text-gray-500 text-sm">
-        No active service requests at the moment.
-      </div>
-    </div>
-  </section>
+    </section>
+  );
+};
+
+const Footer = () => (
+  <footer className="bg-white border-t border-gray-200 pt-16 pb-8 text-center text-gray-400 text-sm">
+    <p>&copy; 2025 ElectroCare Services Pvt Ltd. All rights reserved.</p>
+  </footer>
 );
 
+
+// --- UPDATED PRODUCT GRID ---
 const ProductGrid = ({ products, loading }) => {
   return (
     <section className="max-w-7xl mx-auto px-6 mb-20">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Your Products</h2>
-          <p className="text-gray-500 text-sm mt-1">Manage warranty, book service, or view details.</p>
-        </div>
-        <div className="flex gap-2">
-          <button className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"><FunnelIcon className="h-5 w-5" /></button>
-          <button className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-sm font-semibold text-gray-700 whitespace-nowrap">Sort by: Date</button>
-        </div>
-      </div>
-
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Products</h2>
       {loading ? (
         <div className="text-center py-20">Loading your garage...</div>
       ) : products.length === 0 ? (
         <div className="text-center py-20 border-2 border-dashed border-gray-200 rounded-xl">
-            <p className="text-gray-500 mb-4">No products found.</p>
-            <Link href="/add-appliance" className="text-blue-600 font-bold hover:underline">Add your first product</Link>
+           <p className="text-gray-500 mb-4">No products found.</p>
+           <Link href="/add-appliance" className="text-blue-600 font-bold hover:underline">Add your first product</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => {
-             const statusColor = getStatusColor(product.warrantyStatus);
-             const date = product.purchaseDate ? format(new Date(product.purchaseDate), 'dd MMM yyyy') : "N/A";
+           {products.map((product) => {
+              // Status Logic
+              const isServiceActive = product.hasActiveService;
+              const isProtected = product.hasActiveWarranty || product.warrantyStatus === 'active';
+              
+              // Dynamic Border Color
+              let cardBorder = "border-gray-200";
+              if (isServiceActive) cardBorder = "border-orange-400 ring-1 ring-orange-100"; // Highlight active service
+              else if (isProtected) cardBorder = "border-emerald-200";
 
-             return (
-              <div key={product._id} className="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 relative flex flex-col h-full">
-                
-                <div className="h-48 bg-gray-50 flex items-center justify-center relative overflow-hidden shrink-0">
-                    <span className="text-7xl drop-shadow-md group-hover:scale-110 transition-transform duration-300">
-                        {product.image || "📦"}
-                    </span>
-                    <div className={`absolute top-4 left-4 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${statusColor}`}>
-                       {product.warrantyStatus}
-                    </div>
-                    <button className="absolute top-4 right-4 p-1.5 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:text-blue-600">
-                       <EllipsisHorizontalIcon className="h-5 w-5" />
-                    </button>
-                </div>
+              return (
+                <div key={product._id} className={`group bg-white rounded-2xl border ${cardBorder} overflow-hidden hover:shadow-xl transition-all duration-300 relative flex flex-col h-full`}>
+                   
+                   {/* Top Badge Area */}
+                   <div className="absolute top-4 left-4 z-10 flex flex-col gap-1">
+                      {isServiceActive && (
+                        <div className="px-2 py-1 rounded text-[10px] font-bold uppercase bg-orange-500 text-white shadow-sm flex items-center gap-1 animate-pulse">
+                           <WrenchScrewdriverIcon className="h-3 w-3" /> Repairing
+                        </div>
+                      )}
+                      {!isServiceActive && (
+                        <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase text-white shadow-sm ${isProtected ? "bg-emerald-600" : "bg-blue-600"}`}>
+                           {isProtected ? "Protected" : product.warrantyStatus}
+                        </div>
+                      )}
+                   </div>
 
-                <div className="p-5 flex-1 flex flex-col">
-                    <div className="flex justify-between items-start mb-2">
-                       <h3 className="font-bold text-gray-900 line-clamp-1 text-sm md:text-base" title={product.name}>{product.name}</h3>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-4 line-clamp-1">{product.model}</p>
-                    
-                    <div className="flex justify-between items-center text-xs text-gray-500 border-t border-gray-100 pt-3 mb-4 mt-auto">
-                       <span>Purchased: {date}</span>
-                       <span className="font-semibold text-gray-900">₹{product.price?.toLocaleString()}</span>
-                    </div>
+                   {/* Image */}
+                   <div className="h-48 bg-gray-50 flex items-center justify-center relative">
+                      <span className="text-7xl group-hover:scale-110 transition-transform duration-500">{product.image || "📦"}</span>
+                   </div>
+                   
+                   {/* Info */}
+                   <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-bold text-gray-900 line-clamp-1">{product.name}</h3>
+                      <p className="text-xs text-gray-500 mb-4">{product.model}</p>
+                      
+                      <div className="grid grid-cols-2 gap-2 mt-auto">
+                         <Link href={`/products/${product._id}`}>
+                            <button className="w-full py-2 bg-gray-50 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-100 border border-gray-200">Details</button>
+                         </Link>
 
-                    <div className="grid grid-cols-2 gap-2 mt-auto">
-                       <button className="w-full py-2 bg-gray-50 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-100 border border-gray-200 transition-colors">
-                          Details
-                       </button>
-                       {product.warrantyStatus === 'Expired' ? (
-                           <Link href="/ExtendWarrenty/purchase" className="w-full">
-                               <button className="w-full h-full py-2 bg-orange-500 text-white text-xs font-bold rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-1">
-                                   <ShieldCheckIcon className="h-3 w-3" /> Renew
+                         {/* DYNAMIC ACTION BUTTON */}
+                         {isServiceActive ? (
+                            <Link href={`/products/${product._id}`}>
+                               <button className="w-full h-full py-2 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-bold rounded-lg hover:bg-orange-100 flex items-center justify-center gap-1">
+                                  <TruckIcon className="h-3 w-3" /> Track
                                </button>
-                           </Link>
-                       ) : (
-                           <Link href="/ServiceReq" className="w-full">
-                               <button className="w-full h-full py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1">
-                                   <WrenchScrewdriverIcon className="h-3 w-3" /> Repair
+                            </Link>
+                         ) : isProtected ? (
+                            <Link href="/ServiceReq">
+                               <button className="w-full h-full py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg hover:bg-emerald-100 flex items-center justify-center gap-1">
+                                  <WrenchScrewdriverIcon className="h-3 w-3" /> Repair
                                </button>
-                           </Link>
-                       )}
-                    </div>
+                            </Link>
+                         ) : (
+                            <Link href={`/ExtendWarrenty/purchase?productId=${product._id}`}>
+                               <button className="w-full h-full py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 flex items-center justify-center gap-1">
+                                  <ShieldCheckIcon className="h-3 w-3" /> Extend
+                               </button>
+                            </Link>
+                         )}
+                      </div>
+                   </div>
                 </div>
-              </div>
-            )})}
-            
-            <Link href="/add-appliance" className="flex flex-col items-center justify-center h-full min-h-[300px] border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all cursor-pointer bg-gray-50/50">
-                <div className="p-4 bg-white rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                   <PlusIcon className="h-8 w-8" />
-                </div>
-                <span className="font-bold text-sm md:text-base">Register New Product</span>
-            </Link>
+              );
+           })}
+           {/* Add New Card */}
+           <Link href="/add-appliance" className="flex flex-col items-center justify-center h-full min-h-[300px] border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 bg-gray-50/50">
+              <PlusIcon className="h-8 w-8 mb-2" />
+              <span className="font-bold text-sm">Register New Product</span>
+           </Link>
         </div>
       )}
     </section>
   );
 };
 
-// --- UPDATED INVOICE VAULT (Now Uses Real Data) ---
-const InvoiceVault = ({ products }) => {
-  // Filter products that actually have an invoiceUrl
-  const productsWithInvoices = products.filter(p => p.invoiceUrl);
-
-  return (
-    <section className="bg-gray-50 py-16 md:py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div>
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <DocumentTextIcon className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
-                    Document Vault
-                </h2>
-                <p className="text-gray-500 text-xs md:text-sm mt-1">Securely accessed invoices and warranty cards.</p>
-            </div>
-            <Link href="/add-appliance">
-                <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 shadow-sm transition-colors w-full md:w-auto">
-                    Upload New Document
-                </button>
-            </Link>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-                <thead className="bg-gray-50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-200">
-                    <tr>
-                        <th className="px-6 py-4">Document Name</th>
-                        <th className="px-6 py-4">Linked Product</th>
-                        <th className="px-6 py-4 hidden md:table-cell">Date Added</th>
-                        <th className="px-6 py-4 text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
-                    {productsWithInvoices.length === 0 ? (
-                        <tr>
-                            <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
-                                No invoices found. Register a product with an invoice to see it here.
-                            </td>
-                        </tr>
-                    ) : (
-                        productsWithInvoices.map((product) => (
-                        <tr key={product._id} className="hover:bg-blue-50/50 transition-colors">
-                            <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                <div className="p-2 bg-red-50 rounded text-red-600 shrink-0"><DocumentTextIcon className="h-5 w-5" /></div>
-                                <span className="truncate max-w-[150px] md:max-w-none">
-                                    Invoice_{product.model}.pdf
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 text-gray-500">{product.name}</td>
-                            <td className="px-6 py-4 hidden md:table-cell">
-                                {product.createdAt ? format(new Date(product.createdAt), 'dd MMM yyyy') : "-"}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                                <a href={product.invoiceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 font-bold flex items-center justify-end gap-1 w-full">
-                                    <ArrowDownTrayIcon className="h-4 w-4" /> <span className="hidden sm:inline">View / Download</span>
-                                </a>
-                            </td>
-                        </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
-        </div>
-        </div>
-    </section>
-  );
-};
-
-const Footer = () => (
-  <footer className="bg-white border-t border-gray-200 pt-16 pb-8">
-    <div className="max-w-7xl mx-auto px-6 text-center text-gray-400 text-sm">
-      <p>&copy; 2025 ElectroCare Services Pvt Ltd. All rights reserved.</p>
-    </div>
-  </footer>
-);
-
-// --- MAIN PAGE ---
+// ... Rest of the file (Footer, Main Page) remains same ...
+// --- MAIN PAGE EXPORT ---
 export default function ProductListingPage() {
+  const { data: session, status } = useSession(); 
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // FETCH DATA FROM DB
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/Login");
+    }
+  }, [status, router]);
+
   useEffect(() => {
     const fetchProducts = async () => {
+      if (!session?.user?.email) return;
       try {
-        const res = await fetch("/api/products");
+        const res = await fetch(`/api/products?userId=${session.user.email}`);
         if (res.ok) {
           const data = await res.json();
           setProducts(data);
@@ -256,20 +304,19 @@ export default function ProductListingPage() {
         setLoading(false);
       }
     };
+    if (status === "authenticated") fetchProducts();
+  }, [status, session]);
 
-    fetchProducts();
-  }, []);
+  if (status === "loading") return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-blue-100">
+    <div className="min-h-screen bg-white font-sans text-gray-900">
       <Navbar />
       <GarageHero />
-      <ActiveServiceSection />
-      
-      {/* Pass fetched data to components */}
+      <ActiveServiceSection userEmail={session.user?.email} />
       <ProductGrid products={products} loading={loading} />
       <InvoiceVault products={products} />
-      
       <Footer />
     </div>
   );

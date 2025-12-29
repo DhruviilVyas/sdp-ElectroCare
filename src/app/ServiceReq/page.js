@@ -1,317 +1,272 @@
-// src/app/request-service/page.js
 "use client";
 
-import  { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { 
-  ComputerDesktopIcon, 
-  TvIcon, 
-  ChevronRightIcon,
-  ArrowLeftIcon,
-  PhotoIcon,
-  UserIcon,
-  MapPinIcon,
-  PhoneIcon,
-  EnvelopeIcon
+  WrenchScrewdriverIcon, ChevronRightIcon, ArrowLeftIcon,
+  UserIcon, MapPinIcon, PhoneIcon, CheckCircleIcon,
+  SparklesIcon, ShieldCheckIcon
 } from '@heroicons/react/24/outline';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import Image from 'next/image';
 
-// --- DUMMY DATA ---
-// In a real app, you would fetch this from your API.
-const initialUserDetails = {
-    name: "Kailashsinh Rajput",
-    address: "A-123, Satellite Road, Ahmedabad, Gujarat, 380015",
-    phone: "+91 9712360092",
-    email: "kailash@example.com"
-};
+// --- SUB-COMPONENT: Step Tracker ---
+const StepTracker = ({ currentStep }) => (
+  <div className="w-full max-w-3xl mx-auto mb-10 pt-4">
+      <div className="flex justify-between relative">
+          <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 rounded-full"></div>
+          <div className={`absolute top-1/2 left-0 h-1 bg-blue-600 -z-10 rounded-full transition-all duration-500`} style={{ width: `${((currentStep - 1) / 3) * 100}%` }}></div>
+          {['Select Device', 'Describe Issue', 'Confirm', 'Success'].map((label, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 bg-gray-50 px-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${i + 1 <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-500'}`}>
+                      {i + 1 < currentStep ? <CheckCircleIcon className="h-5 w-5"/> : i + 1}
+                  </div>
+                  <span className={`text-xs font-semibold hidden sm:block ${i + 1 <= currentStep ? 'text-blue-700' : 'text-gray-400'}`}>{label}</span>
+              </div>
+          ))}
+      </div>
+  </div>
+);
 
-const userProducts = [
-  { id: 'prod_1', name: 'Samsung Refrigerator', model: 'RF28R7351SG', icon: <ComputerDesktopIcon className="h-12 w-12 text-gray-500" /> },
-  { id: 'prod_2', name: 'LG Washing Machine', model: 'WM3900HWA', icon: <TvIcon className="h-12 w-12 text-gray-500" /> },
-  { id: 'prod_3', name: 'Sony Bravia TV', model: 'X90J 65"', icon: <TvIcon className="h-12 w-12 text-gray-500" /> },
-  { id: 'prod_4', name: 'MacBook Pro 14"', model: 'M2 Pro', icon: <ComputerDesktopIcon className="h-12 w-12 text-gray-500" /> },
-];
-
-// --- Main Component ---
+// --- MAIN PAGE ---
 export default function ServiceRequestPage() {
-  // Start at Step 1 (Confirm Contact Details)
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   
-  // State for user details to allow editing
-  const [userDetails, setUserDetails] = useState(initialUserDetails);
+  // Data State
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   
-  // State to manage which field is being edited
-  const [editingField, setEditingField] = useState(null);
-  
-  // Form data for the service request
-  const [formData, setFormData] = useState({
-    selectedProduct: null,
-    issueDescription: '',
-    preferredSlot: '',
-    uploadedFiles: [],
+  // Form Data
+  const [issueDescription, setIssueDescription] = useState("");
+  const [preferredSlot, setPreferredSlot] = useState("");
+  const [contactDetails, setContactDetails] = useState({
+    name: "", phone: "", address: "", email: ""
   });
 
-  // Handlers for user details editing
-  const handleEditClick = (field) => {
-    setEditingField(field);
-  };
+  // 1. Fetch User Data & Products
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/Login");
 
-  const handleSaveField = () => {
-    setEditingField(null);
-    // In a real app, you would make an API call here to update the user's details permanently.
-    console.log(`Saved ${editingField}:`, userDetails[editingField]);
-  };
+    if (status === "authenticated" && session?.user?.email) {
+      setContactDetails(prev => ({
+        ...prev,
+        name: session.user.name,
+        email: session.user.email,
+        phone: "9876543210", 
+        address: "Ahmedabad, Gujarat" 
+      }));
 
-  const handleInputChange = (e) => {
-    setUserDetails({ ...userDetails, [e.target.name]: e.target.value });
-  };
-
-  // Step Navigation Handlers
-  const handleProductSelect = (product) => {
-    setFormData({ ...formData, selectedProduct: product });
-    setCurrentStep(3); // Move to Issue Description
-  };
-
-  const handleNextStep = () => {
-    // Perform validation for contact details step
-    if (currentStep === 1) {
-      if (!userDetails.address.trim() || !userDetails.phone.trim() || !userDetails.email.trim()) {
-        alert("Please fill in all contact details before proceeding.");
-        return;
-      }
+      const fetchProducts = async () => {
+        try {
+          const res = await fetch(`/api/products?userId=${session.user.email}`);
+          if (res.ok) {
+            const data = await res.json();
+            setProducts(data);
+          }
+        } catch (e) { console.error(e); }
+      };
+      fetchProducts();
     }
-    setCurrentStep(currentStep + 1);
+  }, [status, session, router]);
+
+
+  // 2. Handle Submission (Without Payment Gateway)
+  const handleSubmitRequest = async () => {
+    setLoading(true);
+    
+    try {
+        const res = await fetch("/api/service/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                productId: selectedProduct._id,
+                productName: selectedProduct.name,
+                productModel: selectedProduct.model,
+                issueDescription,
+                preferredSlot,
+                contactName: contactDetails.name,
+                contactPhone: contactDetails.phone,
+                contactAddress: contactDetails.address,
+                // Simulating payment success
+                isDepositPaid: true, 
+                depositAmount: 2000 
+            }),
+        });
+
+        if (res.ok) {
+            setCurrentStep(4); // Success Step
+        } else {
+            alert("Failed to submit request. Please try again.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Network Error");
+    } finally {
+        setLoading(false);
+    }
   };
 
-  const handlePrevStep = () => {
-    setCurrentStep(currentStep - 1);
-  };
-  
-  // Updated Step Tracker for 4 steps
-  const StepTracker = () => (
-    <div className="w-full max-w-3xl mx-auto mb-12">
-        <ol className="flex items-center w-full">
-            {[1, 2, 3, 4].map((step) => (
-                <li key={step} className={`flex w-full items-center ${currentStep >= step ? 'text-blue-600' : 'text-gray-500'} ${step < 4 ? `after:content-[''] after:w-full after:h-1 after:border-b ${currentStep > step ? 'after:border-blue-600' : 'after:border-gray-200'} after:border-4 after:inline-block` : 'w-fit'}`}>
-                    <span className={`flex items-center justify-center w-10 h-10 ${currentStep >= step ? 'bg-blue-100' : 'bg-gray-100'} rounded-full lg:h-12 lg:w-12 shrink-0`}>
-                        {currentStep > step ? <CheckCircleIcon className="w-6 h-6 text-blue-600"/> : <span className="font-bold">{step}</span>}
-                    </span>
-                </li>
-            ))}
-        </ol>
-    </div>
-  );
-
-  // Helper for rendering editable fields
-  const renderEditableField = (field, label, icon) => {
-    const isEditing = editingField === field;
-    return (
-      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-        <div className="flex-grow flex items-center">
-          {icon}
-          {isEditing ? (
-            <input
-              type="text"
-              name={field}
-              value={userDetails[field]}
-              onChange={handleInputChange}
-              className="ml-3 p-2 border border-gray-300 rounded w-full text-gray-800"
-            />
-          ) : (
-            <p className="ml-3 text-gray-700 break-all">{userDetails[field]}</p>
-          )}
-        </div>
-        {isEditing ? (
-          <button onClick={handleSaveField} className="ml-4 text-green-600 font-semibold hover:underline">Save</button>
-        ) : (
-          <button onClick={() => handleEditClick(field)} className="ml-4 text-blue-600 font-semibold hover:underline">Change</button>
-        )}
-      </div>
-    );
-  };
+  if (status === "loading") return <div className="h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
-      <div className="absolute top-4 left-4 flex items-center space-x-2">
-        <Link href={"/Dashboard"}> <Image src="/logo.jpg" alt="ElectroCare Logo" className="h-12 w-12 rounded-full"    height={30}
-                  width={30} /></Link>
-        <span className="text-xl md:text-2xl font-bold text-blue-900 tracking-wide">ElectroCare</span>
+      
+      {/* Header */}
+      <div className="bg-white px-6 py-4 shadow-sm flex items-center gap-3">
+         <Link href="/Dashboard"><Image src="/logo2.png" width={40} height={40} alt="Logo" className="rounded-full"/></Link>
+         <h1 className="text-xl font-bold text-gray-800">Request Service</h1>
       </div>
 
-      <div className="container mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold text-center text-gray-800 mb-4">Request a Service</h1>
-        <p className="text-center text-gray-600 mb-12 max-w-xl mx-auto">Follow these simple steps to get a certified technician at your doorstep.</p>
+      <div className="container mx-auto px-4 py-8">
+        <StepTracker currentStep={currentStep} />
         
-        <StepTracker />
-        
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-10 max-w-3xl mx-auto min-h-[500px]">
           
-          {/* NEW Step 1: Confirm Contact Details */}
+          {/* STEP 1: SELECT PRODUCT */}
           {currentStep === 1 && (
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Step 1: Confirm Your Contact Details</h2>
-              <p className="text-gray-600 mb-6">Please review and ensure your contact information is up-to-date for our technician.</p>
+            <div className="animate-fade-in-up">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Which device needs repair?</h2>
               
-              <div className="space-y-4">
-                <div className="p-3 border border-gray-200 rounded-lg bg-gray-50 flex items-center">
-                  <UserIcon className="h-5 w-5 mr-3 text-gray-500"/>
-                  <p className="text-gray-700">{userDetails.name}</p>
-                  <span className="ml-auto text-sm text-gray-500">(Name not editable)</span>
+              {products.length === 0 ? (
+                <div className="text-center py-10 border-2 border-dashed border-gray-300 rounded-xl">
+                  <p className="text-gray-500">No products found.</p>
+                  <Link href="/add-appliance" className="text-blue-600 font-bold hover:underline">Register Device First</Link>
                 </div>
-                {renderEditableField('address', 'Address', <MapPinIcon className="h-5 w-5 text-gray-500"/>)}
-                {renderEditableField('phone', 'Phone Number', <PhoneIcon className="h-5 w-5 text-gray-500"/>)}
-                {renderEditableField('email', 'Email Address', <EnvelopeIcon className="h-5 w-5 text-gray-500"/>)}
-              </div>
-
-              <div className="flex justify-end mt-8">
-                <button onClick={handleNextStep} className="px-6 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                  Next Step
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Select Product (formerly Step 1) */}
-          {currentStep === 2 && (
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Step 2: Which product needs service?</h2>
-              <div className="space-y-4">
-                {userProducts.map(product => (
-                  <button key={product.id} onClick={() => handleProductSelect(product)} className="w-full flex items-center text-left p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-500 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <div className="mr-5 shrink-0">{product.icon}</div>
-                    <div className="flex-grow">
-                      <p className="font-bold text-lg text-gray-800">{product.name}</p>
-                      <p className="text-sm text-gray-500">{product.model}</p>
+              ) : (
+                <div className="space-y-3">
+                  {products.map(prod => (
+                    <div 
+                      key={prod._id} 
+                      onClick={() => { setSelectedProduct(prod); setCurrentStep(2); }}
+                      className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all group"
+                    >
+                      <div className="text-4xl mr-4">{prod.image || "📦"}</div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-800 group-hover:text-blue-700">{prod.name}</h3>
+                        <p className="text-xs text-gray-500">{prod.model}</p>
+                        {prod.hasActiveWarranty && <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1"><ShieldCheckIcon className="h-3 w-3"/> Warranty Active</span>}
+                      </div>
+                      <ChevronRightIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600"/>
                     </div>
-                    <ChevronRightIcon className="h-6 w-6 text-gray-400" />
-                  </button>
-                ))}
-              </div>
-              <div className="flex justify-start mt-8">
-                <button onClick={handlePrevStep} className="flex items-center px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                  Back
-                </button>
-              </div>
-              <p className="text-center text-sm text-gray-500 mt-6">
-                Can&apos;t find your product? <a href="/RegisterProduct" className="font-semibold text-blue-600 hover:underline">Register it here.</a>
-              </p>
-            </div>
-          )}
-
-          {/* Step 3: Describe Issue (formerly Step 2) */}
-          {currentStep === 3 && (
-            <div>
-              <h2 className=" text-black text-2xl font-semibold text-gray-900 mb-2">Step 3: Describe the Issue</h2>
-              <p className="text-gray-600 mb-6">Provide as much detail as possible for a faster diagnosis.</p>
-              
-              <div className="mb-6">
-                <label htmlFor="issueDescription" className="block text-sm font-medium text-gray-700 mb-2">Issue Description</label>
-                <textarea
-                  id="issueDescription"
-                  rows="4"
-                  className="text-black w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., The washing machine is making a loud banging noise during the spin cycle. It started 2 days ago."
-                  value={formData.issueDescription}
-                  onChange={e => setFormData({...formData, issueDescription: e.target.value})}
-                ></textarea>
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Upload Photos or Video (Optional)</label>
-                <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
-                  <div className="text-center">
-                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
-                    <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                      <label htmlFor="file-upload" className="relative cursor-pointer rounded-md bg-white font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 hover:text-blue-500">
-                        <span>Upload a file</span>
-                        <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple />
-                      </label>
-                      <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Service Slot</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {['Morning (9am-12pm)', 'Afternoon (1pm-4pm)', 'Evening (5pm-8pm)'].map(slot => (
-                    <button key={slot} onClick={() => setFormData({...formData, preferredSlot: slot})} className={`p-4 border rounded-lg flex flex-col items-center justify-center transition-all ${formData.preferredSlot === slot ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:border-blue-500'}`}>
-                      <span className="text-3xl mb-2">{slot.includes('Morning') ? '☀️' : slot.includes('Afternoon') ? '🕑' : '🌙'}</span>
-                      <span className="font-semibold">{slot.split(' ')[0]}</span>
-                      <span className="text-xs">{slot.match(/\(([^)]+)\)/)[0]}</span>
-                    </button>
                   ))}
                 </div>
-              </div>
-
-              <div className="flex justify-between mt-8">
-                <button onClick={handlePrevStep} className="flex items-center px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                  Back
-                </button>
-                <button onClick={handleNextStep} disabled={!formData.issueDescription || !formData.preferredSlot} className="px-6 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300">
-                  Next Step
-                </button>
-              </div>
+              )}
             </div>
           )}
 
-          {/* Step 4: Confirmation & Deposit (formerly Step 3) */}
+          {/* STEP 2: ISSUE DESCRIPTION */}
+          {currentStep === 2 && (
+            <div className="animate-fade-in-up">
+              <button onClick={() => setCurrentStep(1)} className="flex items-center text-sm text-gray-500 mb-4 hover:text-black"><ArrowLeftIcon className="h-4 w-4 mr-1"/> Back</button>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">What's wrong?</h2>
+              <div className="bg-blue-50 p-3 rounded-lg mb-6 flex items-center gap-3">
+                 <span className="text-2xl">{selectedProduct.image}</span>
+                 <div>
+                    <p className="font-bold text-sm text-blue-900">{selectedProduct.name}</p>
+                    <p className="text-xs text-blue-700">{selectedProduct.model}</p>
+                 </div>
+              </div>
+
+              <label className="block text-sm font-medium text-gray-700 mb-2">Describe the issue</label>
+              <textarea 
+                rows="4" 
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-6 text-gray-800"
+                placeholder="e.g. Not cooling properly..."
+                value={issueDescription}
+                onChange={(e) => setIssueDescription(e.target.value)}
+              ></textarea>
+
+              <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Visit Slot</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+                 {['Morning (9-12)', 'Afternoon (12-4)', 'Evening (4-8)'].map(slot => (
+                    <button 
+                      key={slot}
+                      onClick={() => setPreferredSlot(slot)}
+                      className={`p-3 rounded-lg border text-sm font-semibold transition-all ${preferredSlot === slot ? 'bg-black text-white border-black' : 'bg-white text-gray-600 hover:border-gray-400'}`}
+                    >
+                      {slot}
+                    </button>
+                 ))}
+              </div>
+
+              <button 
+                onClick={() => setCurrentStep(3)} 
+                disabled={!issueDescription || !preferredSlot}
+                className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          )}
+
+          {/* STEP 3: CONFIRM (No Payment Gateway) */}
+          {currentStep === 3 && (
+            <div className="animate-fade-in-up">
+              <button onClick={() => setCurrentStep(2)} className="flex items-center text-sm text-gray-500 mb-4 hover:text-black"><ArrowLeftIcon className="h-4 w-4 mr-1"/> Back</button>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Confirm Request</h2>
+
+              <div className="border border-gray-200 rounded-xl p-5 mb-6">
+                 <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Service Address</h3>
+                 <div className="flex gap-3 items-start">
+                    <MapPinIcon className="h-5 w-5 text-gray-600 mt-1"/>
+                    <div>
+                       <input 
+                         className="w-full font-semibold text-gray-800 border-b border-dashed border-gray-300 focus:outline-none focus:border-blue-500 bg-transparent"
+                         value={contactDetails.address}
+                         onChange={(e) => setContactDetails({...contactDetails, address: e.target.value})}
+                       />
+                       <div className="flex gap-4 mt-2 text-sm text-gray-500">
+                          <span className="flex items-center gap-1"><UserIcon className="h-4 w-4"/> {contactDetails.name}</span>
+                          <span className="flex items-center gap-1"><PhoneIcon className="h-4 w-4"/> {contactDetails.phone}</span>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl mb-6">
+                 <div className="flex justify-between items-center mb-2">
+                    <span className="text-emerald-800 font-bold">Estimated Visit Charge</span>
+                    <span className="text-emerald-800 font-bold">₹2,000</span>
+                 </div>
+                 <p className="text-xs text-emerald-600">
+                    * Amount payable to technician after service.
+                 </p>
+              </div>
+
+              <button 
+                onClick={handleSubmitRequest}
+                disabled={loading}
+                className="w-full py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 flex items-center justify-center gap-2 transition-all"
+              >
+                {loading ? "Processing..." : <>Confirm Booking</>}
+              </button>
+            </div>
+          )}
+
+          {/* STEP 4: SUCCESS */}
           {currentStep === 4 && (
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Step 4: Confirm Details</h2>
-              <div className="space-y-6 border border-gray-200 rounded-lg p-6">
-                <div>
-                  <h3 className="text-black font-bold text-lg mb-4">Service Details:</h3>
-                  <div className="text-gray-700 space-y-2">
-                    <p><strong>Product:</strong> {formData.selectedProduct.name} ({formData.selectedProduct.model})</p>
-                    <p><strong>Issue:</strong> {formData.issueDescription}</p>
-                    <p><strong>Time Slot:</strong> {formData.preferredSlot}</p>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-black font-bold text-lg mb-4">Contact & Address:</h3>
-                  <div className="text-gray-700 space-y-3">
-                    <p className="flex items-center"><UserIcon className="h-5 w-5 mr-3 text-gray-400"/> {userDetails.name}</p>
-                    <p className="flex items-center"><MapPinIcon className="h-5 w-5 mr-3 text-gray-400"/> {userDetails.address}</p>
-                    <p className="flex items-center"><PhoneIcon className="h-5 w-5 mr-3 text-gray-400"/> {userDetails.phone}</p>
-                    <p className="flex items-center"><EnvelopeIcon className="h-5 w-5 mr-3 text-gray-400"/> {userDetails.email}</p>
-                  </div>
-                  <button onClick={() => setCurrentStep(1)} className="text-sm text-blue-600 hover:underline mt-2">Edit details</button>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mt-8">
-                <h3 className="font-bold text-blue-800">Technician Visit Deposit</h3>
-                <p className="text-sm text-blue-700 mt-1">
-                  A refundable security deposit of **₹2000** is required to confirm the technician&apos;s visit. This amount will be adjusted against your final service bill or refunded as per our cancellation policy.
-                </p>
-              </div>
-              
-              <div className="mt-6">
-                <label className="flex items-center">
-                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                  <span className="ml-3 text-sm text-gray-600">I agree to the <a href="/terms" className="text-blue-600 hover:underline">Terms of Service</a> and the deposit policy.</span>
-                </label>
-              </div>
-
-              <div className="flex justify-between mt-8">
-                <button onClick={handlePrevStep} className="flex items-center px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                  Back
-                </button>
-                <Link href="/Payment">
-                  <button className="px-6 py-3 font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 w-full md:w-auto ml-4">
-                    Proceed to Pay ₹2000
-                  </button>
-                </Link>
-              </div>
+            <div className="text-center animate-scale-in py-10">
+               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <SparklesIcon className="h-10 w-10 text-green-600"/>
+               </div>
+               <h2 className="text-3xl font-bold text-gray-900 mb-2">Request Submitted!</h2>
+               <p className="text-gray-500 mb-8">
+                 Your request has been sent to our technicians. You will be notified once a technician accepts the job.
+               </p>
+               
+               <Link href="/Dashboard">
+                 <button className="px-8 py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700">
+                    Go to Dashboard
+                 </button>
+               </Link>
             </div>
           )}
+
         </div>
       </div>
     </div>

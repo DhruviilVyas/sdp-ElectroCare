@@ -1,29 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react"; 
+import { useRouter, useSearchParams } from "next/navigation"; 
 import {
   CheckCircleIcon, ArrowLeftIcon,
   ShieldCheckIcon, CreditCardIcon, SparklesIcon,
+  EyeIcon 
 } from "@heroicons/react/24/outline";
 import { CheckBadgeIcon } from "@heroicons/react/24/solid";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
 
-// --- STATIC CONFIG (Plans don't need DB usually, but can be moved if needed) ---
+// --- CONFIG ---
 const PLANS_CONFIG = [
   { id: 'gold', name: 'Gold Shield', duration: 1, multiplier: 0.08, features: ['100% Parts & Labor', '2 Free Service Visits', 'Cashless Claims'] },
   { id: 'platinum', name: 'Platinum Care', duration: 2, multiplier: 0.14, features: ['All Gold Benefits', 'Accidental Damage', 'Instant Replacement'], recommended: true },
 ];
 
-// --- HELPER: Price Calculator ---
 const calculatePrice = (originalPrice, multiplier) => {
-  // Fallback to 20k only if DB data is missing price, prevents NaN
   const base = (originalPrice || 20000) * multiplier; 
   return Math.floor(base / 100) * 100 + 99; 
 };
 
-// --- SUB-COMPONENTS ---
+// --- COMPONENTS ---
 const Stepper = ({ currentStep }) => (
   <div className="w-full max-w-3xl mx-auto mb-10 pt-8">
     <div className="flex justify-between relative">
@@ -54,29 +55,50 @@ const Navbar = () => (
 
 // --- MAIN PAGE ---
 export default function WarrantyPurchaseFlow() {
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   
-  // Data State
+  // Logic: If URL has ?productId=..., pre-select that product if eligible
+  const preSelectedId = searchParams.get('productId');
+
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(true);
+  
   const [dbProducts, setDbProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [finalWarranty, setFinalWarranty] = useState(null); // Stores server response
+  const [finalWarranty, setFinalWarranty] = useState(null);
 
-  // Derived Calculations
   const planPrice = selectedProduct && selectedPlan ? calculatePrice(selectedProduct.price, selectedPlan.multiplier) : 0;
   const gst = Math.floor(planPrice * 0.18);
   const totalAmount = planPrice + gst;
 
-  // --- API: Fetch Products (Step 1) ---
+  // --- 1. Fetch Products ---
   useEffect(() => {
+    if (status === "unauthenticated") {
+        router.push("/Login");
+        return;
+    }
+
     const fetchProducts = async () => {
+      if (!session?.user?.email) return;
+
       setLoading(true);
       try {
-        const res = await fetch("/api/products");
+        const res = await fetch(`/api/products?userId=${session.user.email}`);
         if (res.ok) {
           const data = await res.json();
           setDbProducts(data);
+
+          // Auto-select if coming from link and not protected
+          if (preSelectedId) {
+             const preProd = data.find(p => p._id === preSelectedId);
+             if (preProd && !preProd.hasActiveWarranty) {
+                 setSelectedProduct(preProd);
+                 setStep(2);
+             }
+          }
         }
       } catch (error) {
         console.error("Failed to load products", error);
@@ -84,10 +106,13 @@ export default function WarrantyPurchaseFlow() {
         setLoading(false);
       }
     };
-    fetchProducts();
-  }, []);
 
-  // --- API: Handle Purchase (Step 3 -> 4) ---
+    if (status === "authenticated") {
+        fetchProducts();
+    }
+  }, [status, session, router, preSelectedId]);
+
+  // --- 2. Handle Payment ---
   const handlePayment = async () => {
     setLoading(true);
     try {
@@ -105,19 +130,23 @@ export default function WarrantyPurchaseFlow() {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Payment failed");
+      const result = await res.json();
 
-      const warrantyData = await res.json();
-      setFinalWarranty(warrantyData); // Store the actual DB record to show in certificate
+      if (!res.ok) {
+         // Show specific backend error (e.g., "Already protected")
+         throw new Error(result.error || "Payment failed");
+      }
+
+      setFinalWarranty(result); 
       setStep(4);
     } catch (error) {
-      alert("Transaction Failed. Please try again.",error);
+      alert(error.message); // Show actual error message
     } finally {
       setLoading(false);
     }
   };
 
-  // --- RENDER STEPS ---
+  // --- STEPS ---
 
   const StepProduct = () => (
     <div className="animate-fade-in-up">
@@ -128,31 +157,74 @@ export default function WarrantyPurchaseFlow() {
         <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>
       ) : dbProducts.length === 0 ? (
         <div className="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-          <p className="text-gray-500 mb-4">No products found in DB.</p>
+          <p className="text-gray-500 mb-4">No products found in your account.</p>
           <Link href="/add-appliance" className="text-blue-600 font-bold hover:underline">Register a Product First</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {dbProducts.map((prod) => (
-            <div 
-              key={prod._id} 
-              onClick={() => { setSelectedProduct(prod); setStep(2); }}
-              className={`cursor-pointer border-2 rounded-2xl p-5 hover:border-blue-500 hover:shadow-lg transition-all ${selectedProduct?._id === prod._id ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white'}`}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-4xl">{prod.image || "📦"}</span>
-                <span className="text-[10px] px-2 py-1 rounded-full font-bold uppercase bg-green-100 text-green-600">Eligible</span>
-              </div>
-              <h3 className="font-bold text-gray-900 line-clamp-1">{prod.name}</h3>
-              <p className="text-sm text-gray-500 line-clamp-1">{prod.model}</p>
-              <p className="text-xs text-gray-400 mt-2 font-mono">₹{prod.price?.toLocaleString()}</p>
-            </div>
-          ))}
+          {dbProducts.map((prod) => {
+            const isProtected = prod.hasActiveWarranty || prod.warrantyStatus === 'active';
+
+            return (
+                <div 
+                  key={prod._id} 
+                  onClick={() => { 
+                      if (isProtected) {
+                          // Redirect to details if already protected
+                          router.push(`/products/${prod._id}`);
+                      } else {
+                          // Proceed to buy if eligible
+                          setSelectedProduct(prod); 
+                          setStep(2); 
+                      }
+                  }}
+                  className={`
+                    relative border-2 rounded-2xl p-5 transition-all cursor-pointer
+                    ${isProtected 
+                      ? 'border-emerald-200 bg-emerald-50 hover:border-emerald-400' 
+                      : 'hover:border-blue-500 hover:shadow-lg border-gray-200 bg-white'
+                    }
+                    ${selectedProduct?._id === prod._id ? 'border-blue-600 bg-blue-50' : ''}
+                  `}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-4xl">{prod.image || "📦"}</span>
+                    {isProtected ? (
+                        <span className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full font-bold uppercase bg-emerald-200 text-emerald-800">
+                            <ShieldCheckIcon className="h-3 w-3" /> Active
+                        </span>
+                    ) : (
+                        <span className="text-[10px] px-2 py-1 rounded-full font-bold uppercase bg-blue-100 text-blue-600">
+                            Eligible
+                        </span>
+                    )}
+                  </div>
+                  <h3 className="font-bold text-gray-900 line-clamp-1">{prod.name}</h3>
+                  <p className="text-sm text-gray-500 line-clamp-1">{prod.model}</p>
+                  
+                  {isProtected ? (
+                     <div className="mt-3 pt-3 border-t border-emerald-200">
+                        <p className="text-xs text-emerald-700 font-bold flex items-center gap-1 mb-1">
+                           <CheckCircleIcon className="h-3 w-3" /> Coverage Active
+                        </p>
+                        <p className="text-[10px] text-emerald-600 flex items-center gap-1">
+                           <EyeIcon className="h-3 w-3" /> View Details
+                        </p>
+                     </div>
+                  ) : (
+                     <p className="text-xs text-gray-400 mt-2 font-mono">₹{prod.price?.toLocaleString()}</p>
+                  )}
+                </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 
+  // ... (StepPlan, StepPayment, StepSuccess remain same as previous, they are fine) ...
+  // Re-pasting StepPlan, StepPayment, StepSuccess for completeness 
+  
   const StepPlan = () => (
     <div className="animate-fade-in-up">
       <div className="flex items-center gap-4 mb-6">
@@ -239,6 +311,8 @@ export default function WarrantyPurchaseFlow() {
       </div>
     </div>
   );
+
+  if (status === "loading") return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">

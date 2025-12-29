@@ -21,6 +21,11 @@ import {
   CpuChipIcon,
   BeakerIcon,
   ChatBubbleLeftRightIcon
+  ,PaperAirplaneIcon,
+  ChevronRightIcon,
+
+  XMarkIcon
+
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Image from "next/image";
@@ -34,106 +39,10 @@ const getStatusColor = (status) => {
   return "bg-blue-600";
 };
 
+import Navbar from "@/components/Navbar";
 // --- COMPONENTS ---
 
 // FIX: Removed TypeScript syntax ": { user: any }"
-const TopHeader = ({ user }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  return (
-    <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
-      {/* Left Side: Logo */}
-      <div className="flex items-center shrink-0">
-        <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/logo2.png"
-            alt="ElectroCare Logo"
-            height={30}
-            width={30}
-            className="h-10 w-10 object-contain rounded-full border border-gray-100 shadow-sm"
-          />
-          <div className="flex items-center">
-            <span className="text-red-500 font-bold text-2xl tracking-tighter">Electro</span>
-            <span className="text-blue-600 font-bold text-2xl tracking-tighter">Care</span>
-          </div>
-        </Link>
-      </div>
-
-      {/* Right Side: Icons & User */}
-      <div className="flex items-center gap-4">
-        {/* Search Bar (Hidden on mobile) */}
-        <div className="hidden md:flex items-center bg-gray-100 px-4 py-2 rounded-full">
-          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-2" />
-          <input
-            type="text"
-            placeholder="Search your products..."
-            className="bg-transparent text-black border-none focus:ring-0 text-sm w-64 outline-none"
-          />
-        </div>
-
-        {/* Product Link */}
-        <div className="flex items-center gap-4 text-sm font-medium">
-          <Link href={"/products"}>
-            <div className="hidden lg:flex items-center text-black gap-1 cursor-pointer hover:text-blue-600 border border-gray-300 px-3 py-1.5 rounded bg-white">
-              <ChartBarIcon className="h-4 w-4" /> <span>Product Listing</span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Notification Bell */}
-        <button className="p-2 relative hover:bg-gray-100 rounded-full transition-colors">
-          <BellIcon className="h-6 w-6 text-gray-600" />
-          <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
-
-        {/* ✅ USER DROPDOWN SECTION */}
-        <div className="relative">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="h-9 w-9 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm hover:ring-2 hover:ring-offset-2 hover:ring-blue-500 transition-all focus:outline-none"
-          >
-            {(user?.name ? user.name.charAt(0).toUpperCase() : "U")}
-          </button>
-
-          {/* Dropdown Menu */}
-          {isMenuOpen && (
-            <div className="absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50 origin-top-right">
-              {/* User Info Header */}
-              <div className="px-4 py-2 border-b border-gray-100 mb-1">
-                <p className="text-sm font-bold text-gray-900 truncate">{user?.name || "Guest"}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email || ""}</p>
-              </div>
-
-              {/* Menu Items */}
-              <Link
-                href="/profile"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
-              >
-                Profile Settings
-              </Link>
-              
-              <button
-                onClick={() => signOut({ callbackUrl: "/Login" })}
-                className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-              >
-                Sign Out
-              </button>
-            </div>
-          )}
-
-          {/* Close menu when clicking outside */}
-          {isMenuOpen && (
-            <div
-              className="fixed inset-0 z-40 bg-transparent"
-              onClick={() => setIsMenuOpen(false)}
-            />
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-};
-
 const HerServiceSection = ({ user }) => {
   const stats = { activeRepairs: 59, repairsToday: 80, avgTime: "8", saved: "5" };
 
@@ -164,7 +73,7 @@ const HerServiceSection = ({ user }) => {
               Need a quick fix or a maintenance check?
             </p>
             
-            <Link href="/ServiceReq">
+            <Link href="/service-landing">
               <button className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-4 rounded-xl font-bold shadow-lg shadow-white/10 flex items-center gap-2 transition-all transform hover:-translate-y-1">
                 <WrenchScrewdriverIcon className="h-5 w-5" /> Book a Repair
               </button>
@@ -188,7 +97,7 @@ const HerServiceSection = ({ user }) => {
                 </Link>
 
                 <Link href="/warrenty-landing" className="w-full sm:w-auto">
-                  <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:opacity-90 px-6 py-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
+                  <button className="w-full bg-white/10 text-white hover:bg-white/20 border border-white/20 px-6 py-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
                     <ShieldCheckIcon className="h-5 w-5" /> 
                     <span>Extend Warranty</span>
                   </button>
@@ -215,65 +124,131 @@ const HerServiceSection = ({ user }) => {
       </div>
     </section>
   );
-};
+};const RegisteredProducts = ({ products = [], loading }) => {
+  // Logic: Show only first 6 items
+  const displayedProducts = products.slice(0, 6);
+  const showViewAll = products.length > 6;
 
-const RegisteredProducts = ({ products = [], loading }) => (
-  <section className="mb-8 px-4 md:px-0">
-     <div className="flex items-center justify-between mb-6">
+  return (
+    <section className="mb-8 px-4 md:px-0">
+      <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-800">Your Registered Products</h3>
+        
         <Link href="/add-appliance" className="text-blue-600 text-sm font-semibold hover:underline flex items-center">
            Add New Product <span className="ml-1">+</span>
         </Link>
-     </div>
-     
-     {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1,2,3,4].map(i => (
-                <div key={i} className="h-64 bg-gray-200 rounded-xl animate-pulse"></div>
-            ))}
-        </div>
-     ) : products.length === 0 ? (
-        <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-           <p className="text-gray-500">No products registered yet.</p>
-           <Link href="/add-appliance" className="text-blue-600 font-bold mt-2 inline-block">Register First Device</Link>
-        </div>
-     ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          {products.map((product) => {
-            const displayColor = getStatusColor(product.warrantyStatus);
-            return (
-            <div key={product._id} className="bg-white border border-gray-200 rounded-lg p-4 relative hover:shadow-md transition-all group">
-               <div className={`absolute top-4 left-0 px-3 py-1 text-[10px] font-bold text-white rounded-r-md uppercase tracking-wide shadow-sm ${displayColor}`}>
-                  {product.warrantyStatus}
-               </div>
-               <div className="h-40 flex items-center justify-center my-4 bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
-                  <span className="text-6xl filter drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300">
-                    {product.image || "📦"}
-                  </span>
-               </div>
-               <div className="space-y-1 mb-4">
-                  <h4 className="text-sm font-bold text-gray-800 line-clamp-2 h-10 leading-snug">{product.name}</h4>
-                  <p className="text-xs text-gray-500 truncate">{product.model}</p>
-               </div>
-               <div className="pt-3 border-t border-gray-100 flex items-end justify-between">
-                  <div>
-                      <p className="text-[10px] text-gray-400 uppercase font-semibold">Price</p>
-                      <p className="text-xs font-bold text-gray-700">₹{product.price?.toLocaleString() || "N/A"}</p>
-                  </div>
-                  <Link href="/ExtendedWarrenty/purchase">
-                    <button className="px-5 py-1.5 border border-blue-500 text-blue-600 text-xs font-bold rounded hover:bg-blue-50 transition-colors">
-                        Warranty
-                    </button>
-                  </Link>
-               </div>
-            </div>
-            );
-          })}
-        </div>
-     )}
-  </section>
-);
+      </div>
 
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 border-blue-600/30 animate-pulse">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-64 bg-gray-200 rounded-xl animate-pulse"></div>
+          ))}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+          <p className="text-gray-500">No products registered yet.</p>
+          <Link href="/add-appliance" className="text-blue-600 font-bold mt-2 inline-block">
+            Register First Device
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm border-blue-600">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            {displayedProducts.map((product) => {
+              
+              // 1. Check Status
+              const isProtected = product.hasActiveWarranty || product.hasExtendedWarranty || product.warrantyStatus === 'active';
+              
+              // 2. Status Badge Color
+              let statusColor = "bg-blue-600"; 
+              if (isProtected) statusColor = "bg-emerald-600";
+              else if (product.warrantyStatus === 'Expired') statusColor = "bg-red-500";
+
+              return (
+                <div key={product._id} className="bg-white border border-gray-200 rounded-lg p-4 relative hover:shadow-md transition-all group flex flex-col justify-between">
+                  
+                  {/* Badge */}
+                  <div className={`absolute top-4 left-0 px-3 py-1 text-[10px] font-bold text-white rounded-r-md uppercase tracking-wide shadow-sm ${statusColor}`}>
+                    {isProtected ? "Protected" : product.warrantyStatus}
+                  </div>
+
+                  {/* Image */}
+                  <div className="h-32 md:h-40 flex items-center justify-center my-4 bg-gray-50 rounded-lg group-hover:bg-gray-100 transition-colors">
+                    <span className="text-5xl md:text-6xl filter drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300">
+                      {product.image || "📦"}
+                    </span>
+                  </div>
+
+                  {/* Details */}
+                  <div className="space-y-1 mb-4">
+                    <h4 className="text-sm font-bold text-gray-800 line-clamp-2 h-10 leading-snug">
+                      {product.name}
+                    </h4>
+                    <p className="text-xs text-gray-500 truncate">{product.model}</p>
+                  </div>
+
+                  {/* Footer Actions */}
+                  <div className="pt-3 border-t border-gray-100 flex items-end justify-between gap-2">
+                    
+                    {/* Price Section */}
+                    <div>
+                      <p className="text-[10px] text-gray-400 uppercase font-semibold">Price</p>
+                      <p className="text-xs font-bold text-gray-700">
+                        ₹{product.price?.toLocaleString() || "N/A"}
+                      </p>
+                    </div>
+
+                    {/* Action Buttons Group */}
+                    <div className="flex gap-2">
+                        
+                        {/* Details Button (Always Visible) */}
+                        <Link href={`/products/${product._id}`}>
+                           <button className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded hover:bg-gray-200 transition-colors">
+                             Details
+                           </button>
+                        </Link>
+
+                        {/* LOGIC CHANGE: 
+                            - Agar Protected hai -> To 'Repair' dikhao.
+                            - Agar Protected nahi hai -> To 'Extend' dikhao.
+                        */}
+                        {isProtected ? (
+                           <Link href="/ServiceReq">
+                             <button className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold rounded hover:bg-emerald-100 transition-colors flex items-center gap-1">
+                               <WrenchScrewdriverIcon className="h-3 w-3" />
+                               <span>Repair</span>
+                             </button>
+                           </Link>
+                        ) : (
+                           <Link href={`/ExtendWarrenty/purchase?productId=${product._id}`}>
+                             <button className="px-3 py-1.5 border border-blue-500 text-blue-600 text-[10px] font-bold rounded hover:bg-blue-50 transition-colors flex items-center gap-1">
+                               <ShieldCheckIcon className="h-3 w-3" />
+                               <span>Extend</span>
+                             </button>
+                           </Link>
+                        )}
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {showViewAll && (
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <Link href="/products" className="flex items-center text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors group">
+                View all registered products
+                <ChevronRightIcon className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+};
 const QuickActionCard = () => (
   <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm h-full flex flex-col justify-between hover:shadow-md transition-shadow">
     <div>
@@ -355,40 +330,136 @@ const TestimonialsSection = () => {
       </section>
     );
 };
+const AiBanner = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
-const AiBanner = () => (
-  <div className="relative overflow-hidden rounded-3xl bg-gray-900 text-white p-8 md:p-12 mb-12 shadow-2xl">
-    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-    <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-    
-    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-      <div className="max-w-xl">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wide mb-4 border border-blue-500/30">
-          <CpuChipIcon className="h-4 w-4" /> Beta Feature
+  const handleDiagnosis = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    setLoading(true);
+    setResponse(""); 
+
+    try {
+      // Calls the API we created in Part 1
+      const res = await fetch("/api/diagnose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problem: input }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setResponse(data.result || "Could not diagnose.");
+      } else {
+        setResponse("Error: " + data.error);
+      }
+    } catch (err) {
+      setResponse("Connection failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Banner Section */}
+      <div className="relative overflow-hidden rounded-3xl bg-gray-900 text-white p-8 md:p-12 mb-12 shadow-2xl">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wide mb-4 border border-blue-500/30">
+              <CpuChipIcon className="h-4 w-4" /> Beta Feature
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
+              Not sure what&apos;s wrong? <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Ask our AI Technician.</span>
+            </h2>
+            <p className="text-gray-400 mb-8 text-lg">
+              Describe the sound or issue your appliance is making. Our AI will diagnose it instantly.
+            </p>
+            
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="group bg-white text-gray-900 px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors"
+            >
+              <ChatBubbleLeftRightIcon className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
+              Start Diagnosis
+            </button>
+          </div>
+          
+          <div className="relative">
+             <div className="w-32 h-32 border-4 border-blue-500/30 rounded-full flex items-center justify-center animate-spin-slow">
+                <div className="w-24 h-24 border-4 border-purple-500/50 rounded-full border-t-transparent animate-spin"></div>
+             </div>
+             <BeakerIcon className="h-10 w-10 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          </div>
         </div>
-        <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
-          Not sure what&apos;s wrong? <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Ask our AI Technician.</span>
-        </h2>
-        <p className="text-gray-400 mb-8 text-lg">
-          Upload a photo or describe the sound your appliance is making. Our AI will diagnose the issue instantly.
-        </p>
-        <button className="group bg-white text-gray-900 px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors">
-          <ChatBubbleLeftRightIcon className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
-          Start Diagnosis
-        </button>
       </div>
-      
-      <div className="relative">
-         <div className="w-32 h-32 border-4 border-blue-500/30 rounded-full flex items-center justify-center animate-spin-slow">
-            <div className="w-24 h-24 border-4 border-purple-500/50 rounded-full border-t-transparent animate-spin"></div>
-         </div>
-         <BeakerIcon className="h-10 w-10 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-      </div>
-    </div>
-  </div>
-);
 
+      {/* Modal Section */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in-up">
+            
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 flex justify-between items-center text-white">
+              <div className="flex items-center gap-2">
+                <CpuChipIcon className="h-6 w-6" />
+                <h3 className="font-bold text-lg">AI Technician</h3>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="hover:bg-white/20 p-1 rounded-full transition-colors">
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {response ? (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <p className="text-sm font-bold text-blue-800 mb-1">Diagnosis:</p>
+                    <p className="text-gray-800 leading-relaxed">{typeof response === 'object' ? JSON.stringify(response) : response}</p>
+                  </div>
+                  <button 
+                    onClick={() => { setResponse(""); setInput(""); }}
+                    className="w-full py-2 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200"
+                  >
+                    Ask Another Question
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleDiagnosis}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Describe the problem (e.g., "Washing machine making loud banging noise")
+                  </label>
+                  <textarea
+                    rows={4}
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none bg-gray-50 text-gray-900"
+                    placeholder="Type here..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    autoFocus
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={loading || !input.trim()}
+                    className="mt-4 w-full bg-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Analyzing..." : <><PaperAirplaneIcon className="h-5 w-5" /> Analyze Issue</>}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 const Footer = () => (
   <footer className="bg-gray-800 text-gray-300 py-12 border-t border-gray-700 rounded-t-3xl">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -406,16 +477,16 @@ const Footer = () => (
       <div>
         <h4 className="text-white font-bold mb-4">Quick Links</h4>
         <ul className="space-y-2 text-sm">
-          <li><Link href="#" className="hover:text-blue-400 transition-colors">About Us</Link></li>
-          <li><Link href="#" className="hover:text-blue-400 transition-colors">Services</Link></li>
-          <li><Link href="#" className="hover:text-blue-400 transition-colors">Book a Repair</Link></li>
-          <li><Link href="#" className="hover:text-blue-400 transition-colors">Careers</Link></li>
+          <li><Link href="https://www.uber.com/us/en/about/" className="hover:text-blue-400 transition-colors">About Us</Link></li>
+          <li><Link href="/" className="hover:text-blue-400 transition-colors">Services</Link></li>
+          <li><Link href="/service-landing" className="hover:text-blue-400 transition-colors">Book a Repair</Link></li>
+          <li><Link href="https://www.uber.com/us/en/about/" className="hover:text-blue-400 transition-colors">Careers</Link></li>
         </ul>
       </div>
       <div>
         <h4 className="text-white font-bold mb-4">Contact</h4>
         <ul className="space-y-2 text-sm">
-          <li className="flex items-center gap-2"><PhoneIcon className="h-4 w-4" /> 09240250346</li>
+          <li className="flex items-center gap-2"><PhoneIcon className="h-4 w-4" /> 997908931</li>
           <li className="flex items-center gap-2"><MapPinIcon className="h-4 w-4" /> Ahmedabad, Gujarat</li>
           <li className="flex items-center gap-2">✉️ support@electrocare.in</li>
         </ul>
@@ -461,7 +532,7 @@ const res = await fetch(`/api/products?userId=${session.user.email}`, {
         fetchProducts();
     }
   }, [status, session]); 
-  
+
   if (status === "loading") {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -472,8 +543,8 @@ const res = await fetch(`/api/products?userId=${session.user.email}`, {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      <TopHeader user={session.user} />
-      
+    
+    <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <div className="flex justify-between items-end">
            <div>

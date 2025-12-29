@@ -3,13 +3,15 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
+import type { AuthOptions } from "next-auth";
 
-const handler = NextAuth({
+// ✅ CHANGE: 'authOptions' ko alag variable banakar EXPORT kiya hai
+export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
   pages: {
-    signIn: "/Login", // Use your custom login page
+    signIn: "/Login", 
   },
   providers: [
     CredentialsProvider({
@@ -38,6 +40,8 @@ const handler = NextAuth({
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET, 
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
