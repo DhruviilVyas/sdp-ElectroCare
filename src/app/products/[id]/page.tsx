@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation"; 
 import Navbar from "@/components/Navbar";
 import { 
-  ArrowLeftIcon, // Used in Back button
+  ArrowLeftIcon,
   CalendarDaysIcon, 
   QrCodeIcon, 
   ShieldCheckIcon, 
@@ -11,13 +11,14 @@ import {
   CheckCircleIcon, 
   XCircleIcon, 
   DocumentCheckIcon,
-  TruckIcon, // Used in Tracker
-  UserIcon, // Used in Tracker
+  TruckIcon,
+  UserIcon,
+  
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// --- 1. Define Types (To fix 'Unexpected any' error) ---
+// --- 1. DEFINE TYPES (To fix 'Unexpected any' error) ---
 interface ServiceDetails {
   _id: string;
   status: string;
@@ -63,8 +64,6 @@ const ServiceStatusCard = ({ service }: { service: ServiceDetails }) => {
   
   const currentStepIndex = statusMap[service.status] || 1;
   
- 
-
   const steps = [
     { id: 'pending', label: 'Request Sent', icon: <DocumentCheckIcon className="h-4 w-4"/> },
     { id: 'upcoming', label: 'Tech Assigned', icon: <UserIcon className="h-4 w-4"/> },
@@ -200,10 +199,10 @@ export default function ProductDetailPage() {
                 <div className="text-8xl my-6 filter drop-shadow-lg transform hover:scale-105 transition-transform duration-300">
                    {product.image || "📦"}
                 </div>
-                <h1 className="text-xl font-bold text-center text-gray-900 leading-tight">{product?.name || "Product"}</h1>
-                <p className="text-sm text-gray-500 mt-1">{product?.model || "N/A"}</p>
+                <h1 className="text-xl font-bold text-center text-gray-900 leading-tight">{product.name}</h1>
+                <p className="text-sm text-gray-500 mt-1">{product.model}</p>
              </div>
-
+             
              {/* Quick Stats Grid */}
              <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">

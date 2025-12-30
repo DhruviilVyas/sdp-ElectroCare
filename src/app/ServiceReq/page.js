@@ -1,9 +1,11 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import {  ChevronRightIcon, ArrowLeftIcon,
+import { 
+ ChevronRightIcon, ArrowLeftIcon,
   UserIcon, MapPinIcon, PhoneIcon, CheckCircleIcon,
   SparklesIcon, ShieldCheckIcon
 } from '@heroicons/react/24/outline';
@@ -79,19 +81,13 @@ export default function ServiceRequestPage() {
     setLoading(true);
     
     try {
-        if (!selectedProduct?._id) {
-            alert("Please select a product first.");
-            setLoading(false);
-            return;
-        }
-
         const res = await fetch("/api/service/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 productId: selectedProduct._id,
-                productName: selectedProduct?.name || "Product",
-                productModel: selectedProduct?.model || "N/A",
+                productName: selectedProduct.name,
+                productModel: selectedProduct.model,
                 issueDescription,
                 preferredSlot,
                 contactName: contactDetails.name,
@@ -169,15 +165,13 @@ export default function ServiceRequestPage() {
             <div className="animate-fade-in-up">
               <button onClick={() => setCurrentStep(1)} className="flex items-center text-sm text-gray-500 mb-4 hover:text-black"><ArrowLeftIcon className="h-4 w-4 mr-1"/> Back</button>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">What&apos;s wrong?</h2>
-              {selectedProduct && (
-                <div className="bg-blue-50 p-3 rounded-lg mb-6 flex items-center gap-3">
-                   <span className="text-2xl">{selectedProduct?.image || "📦"}</span>
-                   <div>
-                      <p className="font-bold text-sm text-blue-900">{selectedProduct?.name || "Product"}</p>
-                      <p className="text-xs text-blue-700">{selectedProduct?.model || "N/A"}</p>
-                   </div>
-                </div>
-              )}
+              <div className="bg-blue-50 p-3 rounded-lg mb-6 flex items-center gap-3">
+                 <span className="text-2xl">{selectedProduct.image}</span>
+                 <div>
+                    <p className="font-bold text-sm text-blue-900">{selectedProduct.name}</p>
+                    <p className="text-xs text-blue-700">{selectedProduct.model}</p>
+                 </div>
+              </div>
 
               <label className="block text-sm font-medium text-gray-700 mb-2">Describe the issue</label>
               <textarea 

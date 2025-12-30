@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react"; // ✅ Added Suspense
+import React, { useState, useEffect, Suspense } from "react"; // ✅ Suspense Added
 import { useSession } from "next-auth/react"; 
 import { useRouter, useSearchParams } from "next/navigation"; 
 import {
   CheckCircleIcon, ArrowLeftIcon,
   ShieldCheckIcon, CreditCardIcon, SparklesIcon,
-  EyeIcon 
+  EyeIcon, CheckBadgeIcon
 } from "@heroicons/react/24/outline";
-import { CheckBadgeIcon } from "@heroicons/react/24/solid";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
@@ -53,11 +52,11 @@ const Navbar = () => (
   </nav>
 );
 
-// --- MAIN CONTENT LOGIC (Moved here) ---
+// --- MAIN LOGIC COMPONENT ---
 function PurchaseContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams(); // ✅ Safe to use here now
+  const searchParams = useSearchParams();
   
   const preSelectedId = searchParams.get('productId');
 
@@ -73,7 +72,6 @@ function PurchaseContent() {
   const gst = Math.floor(planPrice * 0.18);
   const totalAmount = planPrice + gst;
 
-  // --- 1. Fetch Products ---
   useEffect(() => {
     if (status === "unauthenticated") {
         router.push("/Login");
@@ -110,7 +108,6 @@ function PurchaseContent() {
     }
   }, [status, session, router, preSelectedId]);
 
-  // --- 2. Handle Payment ---
   const handlePayment = async () => {
     setLoading(true);
     try {
@@ -137,13 +134,12 @@ function PurchaseContent() {
       setFinalWarranty(result); 
       setStep(4);
     } catch (error) {
-      alert(error.message);
+      alert(error.message); 
     } finally {
       setLoading(false);
     }
   };
 
-  // --- STEPS RENDERERS ---
   const StepProduct = () => (
     <div className="animate-fade-in-up">
       <h2 className="text-2xl font-bold text-gray-900 mb-2">Protect a Device</h2>
@@ -323,10 +319,10 @@ function PurchaseContent() {
   );
 }
 
-// --- MAIN EXPORT WITH SUSPENSE (This Fixes the Build) ---
+// ✅ EXPORT WITH SUSPENSE BOUNDARY
 export default function WarrantyPurchaseFlow() {
   return (
-    <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading Page...</div>}>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}>
       <PurchaseContent />
     </Suspense>
   );

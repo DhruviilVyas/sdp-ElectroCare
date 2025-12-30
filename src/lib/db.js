@@ -6,9 +6,7 @@ if (!MONGODB_URI) {
   throw new Error("MongoDB URI missing");
 }
 
-// Type-safe global cache for mongoose connection
-const globalForMongoose = globalThis;
-let cached = globalForMongoose.mongoose || { conn: null, promise: null };
+let cached = global.mongoose || { conn: null, promise: null };
 
 export async function connectDB() {
   if (cached.conn) return cached.conn;
@@ -18,6 +16,6 @@ export async function connectDB() {
   }
 
   cached.conn = await cached.promise;
-  globalForMongoose.mongoose = cached;
+  global.mongoose = cached;
   return cached.conn;
 }

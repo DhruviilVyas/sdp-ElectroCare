@@ -11,10 +11,9 @@ export async function GET() {
     const requests = await ServiceRequest.find().sort({ createdAt: -1 });
     return NextResponse.json(requests, { status: 200 });
   }catch (error) {
-  console.error("API Error:", error);
-
+  console.error("Technician requests API error:", error);
   return NextResponse.json(
-    { error: "Internal Server Error" },
+    { error: "Failed to fetch technician requests" },
     { status: 500 }
   );
 }

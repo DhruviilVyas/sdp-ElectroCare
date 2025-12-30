@@ -48,11 +48,10 @@ export async function GET(req) {
     
     return NextResponse.json(productsWithStatus, { status: 200 });
 
-  }catch (error) {
-  console.error("API Error:", error);
-
+  } catch (error) {
+  console.error(" requests API error:", error);
   return NextResponse.json(
-    { error: "Internal Server Error" },
+    { error: "Failed to fetch technician requests" },
     { status: 500 }
   );
 }

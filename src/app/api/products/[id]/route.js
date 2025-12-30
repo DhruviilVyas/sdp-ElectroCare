@@ -7,10 +7,10 @@ import mongoose from "mongoose";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req, context) {
+export async function GET(req, { params }) {
   try {
     await connectDB();
-    const { id } = await context.params; 
+    const { id } = await params; 
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
