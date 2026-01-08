@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  electrocare-app:
+    container_name: electrocare_dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Map port 3000 on your PC to 3000 in Docker
+    ports:
+      - "3000:3000"
+    # Sync your local folder with the container (Hot Reloading)
+    volumes:
+      - .:/app
+      - /app/node_modules # Prevent local node_modules from overriding container's
+      - /app/.next
+    # Load your environment variables
+    env_file:
+      - .env.local
+    # Command to keep it running
+    command: npm run dev

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query"; // ✅ Import React Query
 import {
   MapPinIcon,
-  
   SparklesIcon,
   WrenchScrewdriverIcon,
   ArchiveBoxIcon,
@@ -17,21 +16,28 @@ import {
   ShieldCheckIcon,
   CpuChipIcon,
   BeakerIcon,
-  ChatBubbleLeftRightIcon
-  ,PaperAirplaneIcon,
+  ChatBubbleLeftRightIcon,
+  PaperAirplaneIcon,
   ChevronRightIcon,
-
   XMarkIcon
-
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Image from "next/image";
-
-
+import { useState } from "react"; // Needed for AiBanner state
 import Navbar from "@/components/Navbar";
+
+// --- API FETCHER FUNCTION ---
+const fetchProducts = async (email) => {
+  if (!email) return [];
+  const res = await fetch(`/api/products?userId=${email}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch products");
+  }
+  return res.json();
+};
+
 // --- COMPONENTS ---
 
-// FIX: Removed TypeScript syntax ": { user: any }"
 const HerServiceSection = ({ user }) => {
   const stats = { activeRepairs: 59, repairsToday: 80, avgTime: "8", saved: "5" };
 
@@ -96,54 +102,44 @@ const HerServiceSection = ({ user }) => {
 
           {/* Right: Glassmorphism Stats Grid */}
           <div className="w-full lg:w-auto grid grid-cols-2 gap-4 mt-8 lg:mt-0">
-             {[
-               { label: "Active Discount", val: stats.activeRepairs, icon: BoltIcon, color: "text-yellow-400" },
-               { label: "Product Quality", val: stats.repairsToday, icon: SparklesIcon, color: "text-emerald-400" },
-               { label: "Product Count", val: stats.avgTime, icon: ClockIcon, color: "text-purple-400" },
-               { label: "E-VAULT", val: stats.saved, icon: ArchiveBoxIcon, color: "text-green-400" },
-             ].map((s, i) => (
-               <div key={i} className="bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded-2xl flex flex-col justify-center min-w-[140px] hover:bg-white/10 transition-colors">
-                  <s.icon className={`h-6 w-6 ${s.color} mb-3`} />
-                  <p className="text-2xl font-bold">{s.val}</p>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">{s.label}</p>
-               </div>
-             ))}
+              {[
+                { label: "Active Discount", val: stats.activeRepairs, icon: BoltIcon, color: "text-yellow-400" },
+                { label: "Product Quality", val: stats.repairsToday, icon: SparklesIcon, color: "text-emerald-400" },
+                { label: "Product Count", val: stats.avgTime, icon: ClockIcon, color: "text-purple-400" },
+                { label: "E-VAULT", val: stats.saved, icon: ArchiveBoxIcon, color: "text-green-400" },
+              ].map((s, i) => (
+                <div key={i} className="bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded-2xl flex flex-col justify-center min-w-[140px] hover:bg-white/10 transition-colors">
+                   <s.icon className={`h-6 w-6 ${s.color} mb-3`} />
+                   <p className="text-2xl font-bold">{s.val}</p>
+                   <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">{s.label}</p>
+                </div>
+              ))}
           </div>
         </div>
       </div>
     </section>
   );
-};const RegisteredProducts = ({ products = [], loading }) => {
-  // Logic: Show only first 6 items
-  const displayedProducts = products.slice(0, 6);
-  const showViewAll = products.length > 6;
+};
 
+const RegisteredProducts = ({ products, isLoading }) => {
+  const displayedProducts = products?.slice(0, 6) || [];
+  
   return (
     <section className="mb-8 px-4 md:px-0">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-800">Your Registered Products</h3>
-        
-        <Link href="/add-appliance" className="text-blue-600 text-sm font-semibold hover:underline flex items-center">
-           Add New Product <span className="ml-1">+</span>
-        </Link>
+        <Link href="/add-appliance" className="text-blue-600 text-sm font-semibold hover:underline">Add New +</Link>
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 border-blue-600/30 animate-pulse">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-64 bg-gray-200 rounded-xl animate-pulse"></div>
-          ))}
+      {isLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-pulse">
+          {[1, 2, 3].map(i => <div key={i} className="h-40 bg-gray-200 rounded-xl"></div>)}
         </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-          <p className="text-gray-500">No products registered yet.</p>
-          <Link href="/add-appliance" className="text-blue-600 font-bold mt-2 inline-block">
-            Register First Device
-          </Link>
-        </div>
+      ) : displayedProducts.length === 0 ? (
+        <div className="text-center py-10 bg-gray-50 border-2 border-dashed rounded-xl">No products found.</div>
       ) : (
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm border-blue-600">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm border-blue-600">    
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {displayedProducts.map((product) => {
               
               // 1. Check Status
@@ -200,10 +196,6 @@ const HerServiceSection = ({ user }) => {
                           </Link>
                         )}
 
-                        {/* LOGIC CHANGE: 
-                            - Agar Protected hai -> To 'Repair' dikhao.
-                            - Agar Protected nahi hai -> To 'Extend' dikhao.
-                        */}
                         {isProtected ? (
                            <Link href="/ServiceReq">
                              <button className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold rounded hover:bg-emerald-100 transition-colors flex items-center gap-1">
@@ -229,19 +221,18 @@ const HerServiceSection = ({ user }) => {
             })}
           </div>
 
-          {showViewAll && (
-            <div className="mt-6 pt-4 border-t border-gray-100">
-              <Link href="/products" className="flex items-center text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors group">
-                View all registered products
-                <ChevronRightIcon className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          )}
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <Link href="/products" className="flex items-center text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors group">
+              View all registered products
+              <ChevronRightIcon className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       )}
     </section>
   );
 };
+
 const QuickActionCard = () => (
   <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm h-full flex flex-col justify-between hover:shadow-md transition-shadow">
     <div>
@@ -323,6 +314,7 @@ const TestimonialsSection = () => {
       </section>
     );
 };
+
 const AiBanner = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -337,7 +329,6 @@ const AiBanner = () => {
     setResponse(""); 
 
     try {
-      // Calls the API we created in Part 1
       const res = await fetch("/api/diagnose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -351,17 +342,14 @@ const AiBanner = () => {
         setResponse("Error: " + data.error);
       }
     } catch (error) {
-  console.error("API Error:", error);
-}
-
-    finally {
+      console.error("API Error:", error);
+    } finally {
       setLoading(false);
     }
   };
 
   return (
     <>
-      {/* Banner Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gray-900 text-white p-8 md:p-12 mb-12 shadow-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
@@ -397,11 +385,9 @@ const AiBanner = () => {
         </div>
       </div>
 
-      {/* Modal Section */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in-up">
-            
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 flex justify-between items-center text-white">
               <div className="flex items-center gap-2">
                 <CpuChipIcon className="h-6 w-6" />
@@ -455,105 +441,47 @@ const AiBanner = () => {
     </>
   );
 };
-const Footer = () => (
-  <footer className="bg-gray-800 text-gray-300 py-12 border-t border-gray-700 rounded-t-3xl">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-      <div className="col-span-1 md:col-span-2">
-        <h3 className="text-2xl font-bold text-white mb-4">ElectroCare</h3>
-        <p className="text-gray-400 text-sm max-w-xs mb-6">
-          India&apos;s most trusted electronic repair & warranty management platform. Sustainable, fast, and reliable.
-        </p>
-        <div className="flex gap-4">
-          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">𝕏</div>
-          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-800 transition-colors cursor-pointer">f</div>
-          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors cursor-pointer">In</div>
-        </div>
-      </div>
-      <div>
-        <h4 className="text-white font-bold mb-4">Quick Links</h4>
-        <ul className="space-y-2 text-sm">
-          <li><Link href="https://www.uber.com/us/en/about/" className="hover:text-blue-400 transition-colors">About Us</Link></li>
-          <li><Link href="/" className="hover:text-blue-400 transition-colors">Services</Link></li>
-          <li><Link href="/service-landing" className="hover:text-blue-400 transition-colors">Book a Repair</Link></li>
-          <li><Link href="https://www.uber.com/us/en/about/" className="hover:text-blue-400 transition-colors">Careers</Link></li>
-        </ul>
-      </div>
-      <div>
-        <h4 className="text-white font-bold mb-4">Contact</h4>
-        <ul className="space-y-2 text-sm">
-          <li className="flex items-center gap-2"><PhoneIcon className="h-4 w-4" /> 997908931</li>
-          <li className="flex items-center gap-2"><MapPinIcon className="h-4 w-4" /> Ahmedabad, Gujarat</li>
-          <li className="flex items-center gap-2">✉️ support@electrocare.in</li>
-        </ul>
-      </div>
-    </div>
-    <div className="border-t border-gray-700 mt-12 pt-8 text-center text-xs text-gray-500">
-      &copy; 2025 ElectroCare Services Pvt Ltd. All rights reserved.
-    </div>
-  </footer>
-);
 
 // --- MAIN PAGE ---
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/Login");
-    }
-  }, [status, router]);
-
-  // REAL API FETCH - NO MOCK DATA
-  useEffect(() => {
-    const fetchProducts = async () => {
-      if (!session?.user?.email) return;
-      try {
-const res = await fetch(`/api/products?userId=${session.user.email}`, {
-            cache: 'no-store' // Ye line zaroori hai naye data ke liye
-        });
-          if (res.ok) {
-          const data = await res.json();
-          setProducts(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch products", error);
-      } finally {
-        setLoading(false);
-      }
-    };if (status === "authenticated") {
-        fetchProducts();
-    }
-  }, [status, session]); 
-
-  if (status === "loading") {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
-  if (!session) {
+  // Redirect Logic
+  if (status === "unauthenticated") {
+    router.push("/Login");
     return null;
   }
 
+  // ✅ React Query Hook for Products
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ['products', session?.user?.email], 
+    queryFn: () => fetchProducts(session?.user?.email), 
+    enabled: !!session?.user?.email, 
+    staleTime: 1000 * 60 * 5, // Cache for 5 mins
+  });
+
+  if (status === "loading") return <div className="h-screen flex items-center justify-center">Loading User...</div>;
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-    
-    <Navbar />
+      <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+        
         <div className="flex justify-between items-end">
            <div>
-             <h1 className="text-xl font-bold text-gray-800">Welcome, {session.user?.name}</h1>
+             <h1 className="text-xl font-bold text-gray-800">Welcome, {session?.user?.name}</h1>
              <p className="text-sm text-gray-500">Ahmedabad &gt; Dashboard</p>
            </div>
            <p className="text-xs font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full animate-pulse">
              ● System Operational
            </p>
         </div>
-        <HerServiceSection user={session.user} />
+
+        <HerServiceSection user={session?.user} />
         
-        {/* Pass fetched products to component */}
-        <RegisteredProducts products={products} loading={loading} />
+        {/* React Query Data Passed Here */}
+        <RegisteredProducts products={products} isLoading={isLoading} />
 
         <section>
            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -568,7 +496,6 @@ const res = await fetch(`/api/products?userId=${session.user.email}`, {
         <AiBanner />
         <TestimonialsSection />
       </main>
-      <Footer />
     </div>
   );
 }

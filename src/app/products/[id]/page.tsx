@@ -1,6 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React from "react";
 import { useParams, useRouter } from "next/navigation"; 
+import { useQuery } from "@tanstack/react-query"; // ✅ React Query
 import Navbar from "@/components/Navbar";
 import { 
   ArrowLeftIcon,
@@ -13,12 +15,11 @@ import {
   DocumentCheckIcon,
   TruckIcon,
   UserIcon,
-  
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// --- 1. DEFINE TYPES (To fix 'Unexpected any' error) ---
+// --- 1. TYPES ---
 interface ServiceDetails {
   _id: string;
   status: string;
@@ -49,17 +50,20 @@ interface ProductData {
   activeServiceDetails?: ServiceDetails;
 }
 
+// --- 2. FETCH FUNCTION ---
+const fetchProductDetails = async (id: string): Promise<ProductData> => {
+  const res = await fetch(`/api/products/${id}`);
+  if (!res.ok) {
+    throw new Error("Product not found");
+  }
+  return res.json();
+};
+
 // --- HELPER: Service Progress Bar ---
 const ServiceStatusCard = ({ service }: { service: ServiceDetails }) => {
-  // Define Type for statusMap
   const statusMap: Record<string, number> = {
-    'pending': 1,
-    'upcoming': 2,
-    'technician_assigned': 2, // Map multiple statuses if needed
-    'accepted': 2,
-    'on_way': 3,
-    'in_progress': 4,
-    'completed': 5
+    'pending': 1, 'upcoming': 2, 'technician_assigned': 2, 
+    'accepted': 2, 'on_way': 3, 'in_progress': 4, 'completed': 5
   };
   
   const currentStepIndex = statusMap[service.status] || 1;
@@ -75,7 +79,6 @@ const ServiceStatusCard = ({ service }: { service: ServiceDetails }) => {
   return (
     <div className="bg-white border border-blue-100 rounded-2xl p-5 shadow-sm mb-6 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-      
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-blue-900 font-bold text-lg flex items-center gap-2">
@@ -96,7 +99,6 @@ const ServiceStatusCard = ({ service }: { service: ServiceDetails }) => {
         </div>
       </div>
 
-      {/* Progress Bar */}
       <div className="flex items-center justify-between relative mt-6 px-2">
         <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -z-10"></div>
         {steps.map((step, i) => {
@@ -130,41 +132,28 @@ const ServiceStatusCard = ({ service }: { service: ServiceDetails }) => {
 
 export default function ProductDetailPage() {
   const params = useParams(); 
-  // Fix: Explicitly cast ID to string to avoid type errors
   const id = params?.id as string; 
-  
-  // Fix: Use ProductData interface instead of 'any'
-  const [product, setProduct] = useState<ProductData | null>(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    if (!id) return;
-
-    const fetchDetails = async () => {
-      try {
-        const res = await fetch(`/api/products/${id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setProduct(data);
-        } else {
-          router.push("/products");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetails();
+  // ✅ REACT QUERY HOOK
+  const { data: product, isLoading, isError } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => fetchProductDetails(id),
+    enabled: !!id,
     
-    // Optional: Polling for live updates
-    const interval = setInterval(fetchDetails, 10000); 
-    return () => clearInterval(interval);
+    // --- SPEED OPTIMIZATION SETTINGS ---
+    staleTime: 1000 * 60 * 2, // 2 Minutes tak data "fresh" manega (Dubara API call nahi karega)
+    refetchInterval: 10000,   // Har 10 sec me background update (Polling replacement)
+    retry: 1,                 // Agar fail ho to bas 1 baar retry kare
+  });
 
-  }, [id, router]);
+  // Redirect if error (e.g., Invalid ID)
+  if (isError) {
+    router.push("/products");
+    return null;
+  }
 
-  if (loading) return <div className="h-screen flex items-center justify-center text-gray-500 font-medium">Loading Garage...</div>;
+  if (isLoading) return <div className="h-screen flex items-center justify-center text-gray-500 font-medium">Loading Garage...</div>;
   if (!product) return null;
 
   const isWarrantyActive = product?.warrantyStatus === 'active' || product?.hasExtendedWarranty;
@@ -199,8 +188,8 @@ export default function ProductDetailPage() {
                 <div className="text-8xl my-6 filter drop-shadow-lg transform hover:scale-105 transition-transform duration-300">
                    {product.image || "📦"}
                 </div>
-                <h1 className="text-xl font-bold text-center text-gray-900 leading-tight">{product.name}</h1>
-                <p className="text-sm text-gray-500 mt-1">{product.model}</p>
+                <h1 className="text-xl font-bold text-center text-gray-900 leading-tight">{product?.name || "Product"}</h1>
+                <p className="text-sm text-gray-500 mt-1">{product?.model || "N/A"}</p>
              </div>
              
              {/* Quick Stats Grid */}
@@ -284,10 +273,6 @@ export default function ProductDetailPage() {
             )}
 
             {/* 3. MAIN ACTION BUTTON */}
-            {/* Logic: 
-                - If Service Active: Show "Track" (Disabled for now as card is visible)
-                - If Service Not Active: Show "Book Repair"
-            */}
             {!product?.hasActiveService && (
                <Link href="/ServiceReq" className="block">
                   <button className="w-full py-4 bg-black text-white font-bold text-lg rounded-2xl shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2 transform active:scale-95">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-// ✅ NOTE: Google Fonts import hata diya hai taaki build fail na ho
 import "./globals.css";
-import SessionWrapper from "@/components/SessionWrapper"; 
+import SessionWrapper from "@/components/SessionWrapper";
+import QueryProvider from "@/components/QueryProvider"; // Import this
 
 export const metadata: Metadata = {
   title: "ElectroCare",
@@ -15,10 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* ✅ Removed variable classes to prevent font errors */}
       <body className="antialiased">
         <SessionWrapper>
-          {children}
+          <QueryProvider> {/* Wrap here */}
+            {children}
+          </QueryProvider>
         </SessionWrapper>
       </body>
     </html>
