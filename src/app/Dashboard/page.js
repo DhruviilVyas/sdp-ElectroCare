@@ -23,7 +23,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react"; // Needed for AiBanner state
+import { useState, useEffect } from "react"; // ✅ Imported useEffect
 import Navbar from "@/components/Navbar";
 
 // --- API FETCHER FUNCTION ---
@@ -276,7 +276,7 @@ const LiveTrackingMap = () => (
          </div>
          <div><h4 className="font-bold text-gray-800 text-sm">Rajesh Kumar</h4><p className="text-[10px] text-emerald-600 font-bold flex items-center"><ShieldCheckIcon className="h-3 w-3 mr-1" /> Vaccinated</p></div>
        </div>
-       <div className="flex justify-between items-center text-xs border-t border-gray-200 pt-2">
+       <div className="flex justify-between items-center text-black text-xs border-t border-gray-200 pt-2">
          <span>Arriving: <b>10:45 AM</b></span>
          <button className="text-blue-600 font-bold hover:underline">Call</button>
        </div>
@@ -442,26 +442,67 @@ const AiBanner = () => {
   );
 };
 
+const Footer = () => (
+  <footer className="bg-gray-800 text-gray-300 py-12 border-t border-gray-700 rounded-t-3xl">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="col-span-1 md:col-span-2">
+        <h3 className="text-2xl font-bold text-white mb-4">ElectroCare</h3>
+        <p className="text-gray-400 text-sm max-w-xs mb-6">
+          India&apos;s most trusted electronic repair & warranty management platform. Sustainable, fast, and reliable.
+        </p>
+        <div className="flex gap-4">
+          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">𝕏</div>
+          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-800 transition-colors cursor-pointer">f</div>
+          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors cursor-pointer">In</div>
+        </div>
+      </div>
+      <div>
+        <h4 className="text-white font-bold mb-4">Quick Links</h4>
+        <ul className="space-y-2 text-sm">
+          <li><Link href="https://www.uber.com/us/en/about/" className="hover:text-blue-400 transition-colors">About Us</Link></li>
+          <li><Link href="/" className="hover:text-blue-400 transition-colors">Services</Link></li>
+          <li><Link href="/service-landing" className="hover:text-blue-400 transition-colors">Book a Repair</Link></li>
+          <li><Link href="https://www.uber.com/us/en/about/" className="hover:text-blue-400 transition-colors">Careers</Link></li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="text-white font-bold mb-4">Contact</h4>
+        <ul className="space-y-2 text-sm">
+          <li className="flex items-center gap-2"><PhoneIcon className="h-4 w-4" /> 997908931</li>
+          <li className="flex items-center gap-2"><MapPinIcon className="h-4 w-4" /> Ahmedabad, Gujarat</li>
+          <li className="flex items-center gap-2">✉️ support@electrocare.in</li>
+        </ul>
+      </div>
+    </div>
+    <div className="border-t border-gray-700 mt-12 pt-8 text-center text-xs text-gray-500">
+      &copy; 2025 ElectroCare Services Pvt Ltd. All rights reserved.
+    </div>
+  </footer>
+);
+
 // --- MAIN PAGE ---
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Redirect Logic
-  if (status === "unauthenticated") {
-    router.push("/Login");
-    return null;
-  }
-
-  // ✅ React Query Hook for Products
+  // ✅ React Query Hook for Products (Moved to top)
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products', session?.user?.email], 
     queryFn: () => fetchProducts(session?.user?.email), 
-    enabled: !!session?.user?.email, 
+    enabled: status === 'authenticated' && !!session?.user?.email, 
     staleTime: 1000 * 60 * 5, // Cache for 5 mins
   });
 
+  // ✅ REDIRECT IN USEEFFECT
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/Login");
+    }
+  }, [status, router]);
+
+  // ✅ CONDITIONAL RENDERING (AT THE END)
   if (status === "loading") return <div className="h-screen flex items-center justify-center">Loading User...</div>;
+  if (status === "unauthenticated") return null;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -480,7 +521,7 @@ export default function DashboardPage() {
 
         <HerServiceSection user={session?.user} />
         
-        {/* React Query Data Passed Here */}
+        {/* Pass React Query Data Here */}
         <RegisteredProducts products={products} isLoading={isLoading} />
 
         <section>
@@ -496,6 +537,7 @@ export default function DashboardPage() {
         <AiBanner />
         <TestimonialsSection />
       </main>
+      <Footer />
     </div>
   );
 }

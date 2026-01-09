@@ -21,6 +21,7 @@ export async function POST(req) {
     return NextResponse.json({ message: "Invoice Uploaded", url: mockInvoiceUrl }, { status: 200 });
 
   } catch (error) {
+    console.log(error);
     return NextResponse.json({ error: "Upload Failed" }, { status: 500 });
   }
 }
